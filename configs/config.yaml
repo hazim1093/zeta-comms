@@ -1,0 +1,14 @@
+
+logging:
+  level: info
+  format: console # console/text or json
+
+networks:
+  mainnet:
+    api_url: https://mainneturl.com
+    poll_interval: 1m
+  testnet:
+    api_url: https://zetachain-athens.blockpi.network/lcd/v1/public
+    poll_interval: 30s
+# another_net:
+#   api_url: https://anothernet.com

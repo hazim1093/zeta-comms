@@ -3,13 +3,26 @@ package main
 import (
 	"os"
 
+	"github.com/hazim1093/zeta-comms/internal/config"
+	"github.com/hazim1093/zeta-comms/internal/events"
 	"github.com/rs/zerolog"
 )
 
 func main() {
-	log := InitLogger("console", "info") // TODO: get from config
+	cfg, err := config.InitConfig()
+	if err != nil {
+		panic(err)
+	}
 
-	log.Info().Msg("hi")
+	log := InitLogger(cfg.Logging.Format, cfg.Logging.Level)
+
+	log.Debug().Interface("config", cfg).Msg("config loaded")
+
+	govService := events.NewGovService(cfg, &log)
+	govService.StartPollingProposals("testnet")
+
+	// Keep the main function running to allow the polling to continue
+	select {}
 }
 
 func InitLogger(logFormat string, globalLevel string) zerolog.Logger {
