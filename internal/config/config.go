@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -16,8 +17,8 @@ type Config struct {
 		Level  string
 	}
 	Networks map[string]struct {
-		ApiUrl       url.URL `mapstructure:"api_url"`
-		PollInterval string  `mapstructure:"poll_interval"`
+		ApiUrl       url.URL       `mapstructure:"api_url"`
+		PollInterval time.Duration `mapstructure:"poll_interval"`
 	} `mapstructure:"networks"`
 }
 
@@ -33,8 +34,14 @@ func InitConfig() (*Config, error) {
 		return nil, fmt.Errorf("error reading config file: %w", err)
 	}
 
+	decodeHooks := mapstructure.ComposeDecodeHookFunc(
+		mapstructure.StringToTimeDurationHookFunc(),
+		mapstructure.StringToSliceHookFunc(","),
+		stringToURLHookFunc(),
+	)
+
 	var cfg Config
-	if err := v.Unmarshal(&cfg, viper.DecodeHook(stringToURLHookFunc())); err != nil {
+	if err := v.Unmarshal(&cfg, viper.DecodeHook(decodeHooks)); err != nil {
 		return nil, fmt.Errorf("error un-marshalling config: %w", err)
 	}
 	return &cfg, nil

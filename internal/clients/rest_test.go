@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hazim1093/zeta-comms/internal/config"
@@ -112,12 +113,12 @@ func TestGetProposals(t *testing.T) {
 	mockURL, _ := url.Parse(mockServer.URL)
 	testConfig := &config.Config{
 		Networks: map[string]struct {
-			ApiUrl       url.URL `mapstructure:"api_url"`
-			PollInterval string  `mapstructure:"poll_interval"`
+			ApiUrl       url.URL       `mapstructure:"api_url"`
+			PollInterval time.Duration `mapstructure:"poll_interval"`
 		}{
 			"testnet": {
 				ApiUrl:       *mockURL,
-				PollInterval: "",
+				PollInterval: 0,
 			},
 		},
 	}

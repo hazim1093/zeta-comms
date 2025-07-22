@@ -28,35 +28,18 @@ func NewGovService(cfg *config.Config, logger *zerolog.Logger) *GovService {
 	}
 }
 
-func (g *GovService) GetSoftwareUpgradeProposals(network string) ([]clients.Proposal, error) {
-	proposalsResp, err := g.restClient.GetProposals(network)
-	if err != nil {
-		g.log.Error().Err(err).Msg("failed to get proposals")
-		return nil, err
-	}
-
-	proposals := filterSoftwareUpgradeProposals(proposalsResp.Proposals)
-	return proposals, nil
-}
-
 func (g *GovService) StartPollingProposals(network string) {
 	log := g.log.With().Str("network", network).Logger()
 
 	pollInterval := g.config.Networks[network].PollInterval
 
-	duration, err := time.ParseDuration(pollInterval)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to parse poll interval, failed to start polling")
-		return
-	}
-
-	log.Info().Msg("Starting to poll software upgrade proposals every " + duration.String())
+	log.Info().Msg("Starting to poll software upgrade proposals every " + pollInterval.String())
 
 	go func() {
-		ticker := time.NewTicker(duration)
+		ticker := time.NewTicker(pollInterval)
 		defer ticker.Stop()
 
-		if proposals, err := g.GetSoftwareUpgradeProposals(network); err != nil {
+		if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
 			log.Error().Err(err).Msg("failed to get proposals")
 			return
 		} else {
@@ -64,7 +47,7 @@ func (g *GovService) StartPollingProposals(network string) {
 		}
 
 		for range ticker.C {
-			if proposals, err := g.GetSoftwareUpgradeProposals(network); err != nil {
+			if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
 				log.Error().Err(err).Msg("failed to get proposals")
 			} else {
 				log.Info().Msgf("Retrieved proposals: %v", proposals)
@@ -74,6 +57,17 @@ func (g *GovService) StartPollingProposals(network string) {
 	}()
 
 	log.Info().Msg("Polling started")
+}
+
+func (g *GovService) getSoftwareUpgradeProposals(network string) ([]clients.Proposal, error) {
+	proposalsResp, err := g.restClient.GetProposals(network)
+	if err != nil {
+		g.log.Error().Err(err).Msg("failed to get proposals")
+		return nil, err
+	}
+
+	proposals := filterSoftwareUpgradeProposals(proposalsResp.Proposals)
+	return proposals, nil
 }
 
 // TODO: look at the logic again
