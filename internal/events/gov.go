@@ -19,6 +19,12 @@ type GovService struct {
 	log        *zerolog.Logger
 }
 
+// ProposalUpdate contains either proposals or an error
+type ProposalUpdate struct {
+	Proposals []clients.Proposal
+	Error     error
+}
+
 func NewGovService(cfg *config.Config, logger *zerolog.Logger) *GovService {
 	restClient := clients.NewRESTClient(cfg, logger)
 
@@ -29,38 +35,50 @@ func NewGovService(cfg *config.Config, logger *zerolog.Logger) *GovService {
 	}
 }
 
-func (g *GovService) StartPollingProposals(ctx context.Context, network string) {
+// StartPollingProposals starts polling for software upgrade proposals and returns channels for updates and errors
+func (g *GovService) StartPollingProposals(ctx context.Context, network string) chan ProposalUpdate {
 	log := g.log.With().Str("network", network).Logger()
-
 	pollInterval := g.config.Networks[network].PollInterval
 
 	log.Info().Msg("Starting to poll software upgrade proposals every " + pollInterval.String())
 
-	go g.pollProposals(ctx, network, pollInterval, &log)
+	// Create a buffered channel to avoid blocking
+	updateCh := make(chan ProposalUpdate, 10)
+
+	go g.pollProposals(ctx, network, pollInterval, updateCh, &log)
 
 	log.Info().Msg("Polling started")
+	return updateCh
 }
 
-func (g *GovService) pollProposals(ctx context.Context, network string, pollInterval time.Duration, log *zerolog.Logger) {
+func (g *GovService) pollProposals(ctx context.Context, network string, pollInterval time.Duration, updateCh chan ProposalUpdate, log *zerolog.Logger) {
 	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
+	defer close(updateCh)
 
 	// Initial fetch
-	if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
-		log.Error().Err(err).Msg("failed to get proposals")
-		return
+	proposals, err := g.getSoftwareUpgradeProposals(network)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get initial proposals")
+		// Send the error to the channel instead of returning
+		updateCh <- ProposalUpdate{Error: err}
 	} else {
-		log.Info().Msgf("Initial proposals: %v", proposals)
+		log.Debug().Msgf("Initial proposals fetched")
+		// Send initial proposals to the channel
+		updateCh <- ProposalUpdate{Proposals: proposals}
 	}
 
 	// Polling loop
 	for {
 		select {
 		case <-ticker.C:
-			if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
+			proposals, err := g.getSoftwareUpgradeProposals(network)
+			if err != nil {
 				log.Error().Err(err).Msg("failed to get proposals")
+				updateCh <- ProposalUpdate{Error: err}
 			} else {
-				log.Info().Msgf("Retrieved proposals: %v", proposals)
+				log.Debug().Msgf("Proposals fetched")
+				updateCh <- ProposalUpdate{Proposals: proposals}
 			}
 
 		case <-ctx.Done():

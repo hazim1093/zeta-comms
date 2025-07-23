@@ -2,6 +2,7 @@ package clients
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hazim1093/zeta-comms/internal/config"
@@ -27,7 +28,7 @@ type ProposalsResponse struct {
 }
 
 type Proposal struct {
-	ProposalId string    `json:"proposal_id"`
+	ProposalId string    `json:"id"`
 	Status     string    `json:"status"`
 	Title      string    `json:"title"`
 	Summary    string    `json:"summary"`
@@ -35,7 +36,9 @@ type Proposal struct {
 }
 
 type Message struct {
-	Type string `json:"@type"`
+	Type string    `json:"@type"`
+	Name string    `json:"name,omitempty"`
+	Time time.Time `json:"time,omitempty"`
 }
 
 func NewRESTClient(cfg *config.Config, logger *zerolog.Logger) *RESTClient {
