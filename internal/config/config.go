@@ -3,11 +3,13 @@ package config
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -40,14 +42,36 @@ func InitConfig() (*Config, error) {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
+	// Set up command line flags
+	pflag.String("config", "", "Additional config files to load (comma-separated)")
+	pflag.Parse()
+
+	err := v.BindPFlags(pflag.CommandLine)
+	if err != nil {
+		return nil, fmt.Errorf("error binding flags: %w", err)
+	}
+
+	// Read the base config file first
 	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("error reading config file: %w", err)
+		return nil, fmt.Errorf("error reading base config file: %w", err)
+	}
+
+	// Check if additional config files were specified
+	if configFiles := v.GetString("config"); configFiles != "" {
+		// Split comma-separated list of config files
+		for _, configFile := range strings.Split(configFiles, ",") {
+			v.SetConfigFile(configFile)
+			if err := v.MergeInConfig(); err != nil {
+				return nil, fmt.Errorf("error merging config file %s: %w", configFile, err)
+			}
+		}
 	}
 
 	decodeHooks := mapstructure.ComposeDecodeHookFunc(
 		mapstructure.StringToTimeDurationHookFunc(),
 		mapstructure.StringToSliceHookFunc(","),
 		stringToURLHookFunc(),
+		envVarInterpolationHookFunc(), // Add environment variable interpolation
 	)
 
 	var cfg Config
@@ -81,5 +105,36 @@ func stringToURLHookFunc() mapstructure.DecodeHookFunc {
 			return nil, fmt.Errorf("failed to parse URL: %w", err)
 		}
 		return *u, nil
+	}
+}
+
+// Function to process environment variables in strings
+func envVarInterpolationHookFunc() mapstructure.DecodeHookFunc {
+	return func(
+		f reflect.Type,
+		t reflect.Type,
+		data interface{},
+	) (interface{}, error) {
+		// Only process strings
+		if f.Kind() != reflect.String {
+			return data, nil
+		}
+
+		str, ok := data.(string)
+		if !ok {
+			return data, nil
+		}
+
+		// Look for ${VAR} pattern and replace with environment variable
+		result := os.Expand(str, func(key string) string {
+			value, exists := os.LookupEnv(key)
+			if !exists {
+				// Return the original ${VAR} if environment variable doesn't exist
+				return "${" + key + "}"
+			}
+			return value
+		})
+
+		return result, nil
 	}
 }

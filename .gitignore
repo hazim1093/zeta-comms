@@ -1,0 +1,5 @@
+# Ignore the config files
+configs/*.yaml
+!configs/config.yaml
+
+bin/
