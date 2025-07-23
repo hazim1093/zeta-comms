@@ -8,14 +8,16 @@ import (
 )
 
 type CommsEngine struct {
-	config *config.Config
-	log    *zerolog.Logger
+	config              *config.Config
+	log                 *zerolog.Logger
+	notificationService *NotificationService
 }
 
 func NewCommsEngine(cfg *config.Config, log *zerolog.Logger) *CommsEngine {
 	return &CommsEngine{
-		config: cfg,
-		log:    log,
+		config:              cfg,
+		log:                 log,
+		notificationService: NewNotificationService(cfg, log),
 	}
 }
 
@@ -50,7 +52,7 @@ func (e *CommsEngine) handleProposals(network string, proposals []zetachain.Prop
 		audiences := e.config.Networks[network].Audiences
 
 		for _, audience := range audiences {
-			Notify(e.config, e.log, Notification{
+			e.notificationService.Notify(Notification{
 				Title:          proposal.Title,
 				Message:        proposal.Summary,
 				ProposalId:     proposal.ProposalId,
