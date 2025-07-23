@@ -9,6 +9,6 @@ networks:
     poll_interval: 1m
   testnet:
     api_url: https://zetachain-athens.blockpi.network/lcd/v1/public
-    poll_interval: 30s
+    poll_interval: 5s
 # another_net:
 #   api_url: https://anothernet.com

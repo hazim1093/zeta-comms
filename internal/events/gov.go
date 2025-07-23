@@ -35,28 +35,29 @@ func (g *GovService) StartPollingProposals(network string) {
 
 	log.Info().Msg("Starting to poll software upgrade proposals every " + pollInterval.String())
 
-	go func() {
-		ticker := time.NewTicker(pollInterval)
-		defer ticker.Stop()
-
-		if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
-			log.Error().Err(err).Msg("failed to get proposals")
-			return
-		} else {
-			log.Info().Msgf("Initial proposals: %v", proposals)
-		}
-
-		for range ticker.C {
-			if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
-				log.Error().Err(err).Msg("failed to get proposals")
-			} else {
-				log.Info().Msgf("Retrieved proposals: %v", proposals)
-			}
-		}
-
-	}()
+	go g.pollProposals(network, pollInterval, &log)
 
 	log.Info().Msg("Polling started")
+}
+
+func (g *GovService) pollProposals(network string, pollInterval time.Duration, log *zerolog.Logger) {
+	ticker := time.NewTicker(pollInterval)
+	defer ticker.Stop()
+
+	if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
+		log.Error().Err(err).Msg("failed to get proposals")
+		return
+	} else {
+		log.Info().Msgf("Initial proposals: %v", proposals)
+	}
+
+	for range ticker.C {
+		if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
+			log.Error().Err(err).Msg("failed to get proposals")
+		} else {
+			log.Info().Msgf("Retrieved proposals: %v", proposals)
+		}
+	}
 }
 
 func (g *GovService) getSoftwareUpgradeProposals(network string) ([]clients.Proposal, error) {
