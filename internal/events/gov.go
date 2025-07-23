@@ -1,6 +1,7 @@
 package events
 
 import (
+	"context"
 	"time"
 
 	"github.com/hazim1093/zeta-comms/internal/clients"
@@ -28,22 +29,23 @@ func NewGovService(cfg *config.Config, logger *zerolog.Logger) *GovService {
 	}
 }
 
-func (g *GovService) StartPollingProposals(network string) {
+func (g *GovService) StartPollingProposals(ctx context.Context, network string) {
 	log := g.log.With().Str("network", network).Logger()
 
 	pollInterval := g.config.Networks[network].PollInterval
 
 	log.Info().Msg("Starting to poll software upgrade proposals every " + pollInterval.String())
 
-	go g.pollProposals(network, pollInterval, &log)
+	go g.pollProposals(ctx, network, pollInterval, &log)
 
 	log.Info().Msg("Polling started")
 }
 
-func (g *GovService) pollProposals(network string, pollInterval time.Duration, log *zerolog.Logger) {
+func (g *GovService) pollProposals(ctx context.Context, network string, pollInterval time.Duration, log *zerolog.Logger) {
 	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
 
+	// Initial fetch
 	if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
 		log.Error().Err(err).Msg("failed to get proposals")
 		return
@@ -51,11 +53,19 @@ func (g *GovService) pollProposals(network string, pollInterval time.Duration, l
 		log.Info().Msgf("Initial proposals: %v", proposals)
 	}
 
-	for range ticker.C {
-		if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
-			log.Error().Err(err).Msg("failed to get proposals")
-		} else {
-			log.Info().Msgf("Retrieved proposals: %v", proposals)
+	// Polling loop
+	for {
+		select {
+		case <-ticker.C:
+			if proposals, err := g.getSoftwareUpgradeProposals(network); err != nil {
+				log.Error().Err(err).Msg("failed to get proposals")
+			} else {
+				log.Info().Msgf("Retrieved proposals: %v", proposals)
+			}
+
+		case <-ctx.Done():
+			log.Info().Msg("Stopping proposal polling due to context cancellation")
+			return
 		}
 	}
 }

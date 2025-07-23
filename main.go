@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/hazim1093/zeta-comms/internal/config"
@@ -19,7 +20,7 @@ func main() {
 	log.Debug().Interface("config", cfg).Msg("config loaded")
 
 	govService := events.NewGovService(cfg, &log)
-	govService.StartPollingProposals("testnet")
+	govService.StartPollingProposals(context.Background(), "testnet")
 
 	// Keep the main function running to allow the polling to continue
 	select {}
