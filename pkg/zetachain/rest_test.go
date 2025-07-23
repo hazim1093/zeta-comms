@@ -115,10 +115,12 @@ func TestGetProposals(t *testing.T) {
 		Networks: map[string]struct {
 			ApiUrl       url.URL       `mapstructure:"api_url"`
 			PollInterval time.Duration `mapstructure:"poll_interval"`
+			Audiences    []string      `mapstructure:"audiences"`
 		}{
 			"testnet": {
 				ApiUrl:       *mockURL,
 				PollInterval: 0,
+				Audiences:    nil,
 			},
 		},
 	}

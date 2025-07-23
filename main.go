@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/hazim1093/zeta-comms/internal/comms"
 	"github.com/hazim1093/zeta-comms/internal/config"
 	"github.com/hazim1093/zeta-comms/internal/events"
-	"github.com/hazim1093/zeta-comms/pkg/zetachain"
 	"github.com/rs/zerolog"
 )
 
@@ -46,49 +45,12 @@ func main() {
 func startZetaComms(ctx context.Context, cfg *config.Config, log *zerolog.Logger) {
 	// Start the governance service and get the proposal update channel
 	govService := events.NewGovService(cfg, log)
+
 	testnetUpdateChannel := govService.StartPollingProposals(ctx, "testnet")
 
 	// Process proposal updates in a separate goroutine
-	go processProposalUpdates(testnetUpdateChannel, log)
-}
-
-// processProposalUpdates handles the proposal updates from the channel
-func processProposalUpdates(updateCh <-chan events.ProposalUpdate, log *zerolog.Logger) {
-	for update := range updateCh {
-		if update.Error != nil {
-			log.Error().Err(update.Error).Msg("Error fetching proposals")
-			continue
-		}
-
-		log.Info().Msgf("Received %d proposals", len(update.Proposals))
-
-		// Process each proposal
-		for _, proposal := range update.Proposals {
-			handleProposal(proposal, log)
-		}
-	}
-	log.Debug().Msg("Proposal update channel closed")
-}
-
-// handleProposal processes a single proposal
-func handleProposal(proposal zetachain.Proposal, log *zerolog.Logger) {
-	log.Info().
-		Str("id", proposal.ProposalId).
-		Str("title", proposal.Title).
-		Str("status", proposal.Status).
-		Msg("Processing proposal")
-
-	switch proposal.Status {
-	case "PROPOSAL_STATUS_VOTING_PERIOD":
-		// Alert that voting is open
-		fmt.Printf("ALERT: Proposal %s is open for voting\n", proposal.ProposalId)
-	case "PROPOSAL_STATUS_PASSED":
-		// Prepare for the upgrade
-		fmt.Printf("ALERT: Proposal %s has passed - prepare for upgrade\n", proposal.ProposalId)
-	case "PROPOSAL_STATUS_REJECTED":
-		// Log the rejection
-		fmt.Printf("INFO: Proposal %s was rejected\n", proposal.ProposalId)
-	}
+	commsEngine := comms.NewCommsEngine(cfg, log)
+	go commsEngine.ProcessProposalUpdates("testnet", testnetUpdateChannel)
 }
 
 func InitLogger(logFormat string, globalLevel string) zerolog.Logger {

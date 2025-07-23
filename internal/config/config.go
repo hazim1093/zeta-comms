@@ -16,10 +16,20 @@ type Config struct {
 		Format string
 		Level  string
 	}
+
 	Networks map[string]struct {
 		ApiUrl       url.URL       `mapstructure:"api_url"`
 		PollInterval time.Duration `mapstructure:"poll_interval"`
+		Audiences    []string      `mapstructure:"audiences"`
 	} `mapstructure:"networks"`
+
+	AudienceConfig map[string]struct {
+		Channels struct {
+			Discord  []string `mapstructure:"discord"`
+			Telegram []string `mapstructure:"telegram"`
+			Slack    []string `mapstructure:"slack"`
+		} `mapstructure:"channels"`
+	} `mapstructure:"audience_config"`
 }
 
 func InitConfig() (*Config, error) {

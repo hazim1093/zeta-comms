@@ -7,8 +7,32 @@ networks:
   mainnet:
     api_url: https://mainneturl.com
     poll_interval: 1m
+    audiences: # Should match the keys in audience_config
+    - mainnet_operators
+    - testnet_operators
   testnet:
     api_url: https://zetachain-athens.blockpi.network/lcd/v1/public
     poll_interval: 5s
+    audiences:
+    - testnet_operators
 # another_net:
 #   api_url: https://anothernet.com
+
+audience_config:
+  mainnet_operators:
+    channels:
+      discord:
+      - channel1
+      slack:
+      - https://slack.com/mainnet-webhook
+      telegram:
+      - channel2
+      - channel3
+  testnet_operators:
+    channels:
+      discord:
+      - https://discord.gg/testnet
+      slack:
+      - https://slack.com/testnet
+      telegram:
+      - https://t.me/testnet
