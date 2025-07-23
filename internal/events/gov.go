@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/hazim1093/zeta-comms/internal/clients"
 	"github.com/hazim1093/zeta-comms/internal/config"
+	"github.com/hazim1093/zeta-comms/pkg/zetachain"
 	"github.com/rs/zerolog"
 )
 
@@ -14,19 +14,19 @@ const (
 )
 
 type GovService struct {
-	restClient *clients.RESTClient
+	restClient *zetachain.RESTClient
 	config     *config.Config
 	log        *zerolog.Logger
 }
 
 // ProposalUpdate contains either proposals or an error
 type ProposalUpdate struct {
-	Proposals []clients.Proposal
+	Proposals []zetachain.Proposal
 	Error     error
 }
 
 func NewGovService(cfg *config.Config, logger *zerolog.Logger) *GovService {
-	restClient := clients.NewRESTClient(cfg, logger)
+	restClient := zetachain.NewRESTClient(cfg, logger)
 
 	return &GovService{
 		restClient: restClient,
@@ -88,7 +88,7 @@ func (g *GovService) pollProposals(ctx context.Context, network string, pollInte
 	}
 }
 
-func (g *GovService) getSoftwareUpgradeProposals(network string) ([]clients.Proposal, error) {
+func (g *GovService) getSoftwareUpgradeProposals(network string) ([]zetachain.Proposal, error) {
 	proposalsResp, err := g.restClient.GetProposals(network)
 	if err != nil {
 		g.log.Error().Err(err).Msg("failed to get proposals")
@@ -100,8 +100,8 @@ func (g *GovService) getSoftwareUpgradeProposals(network string) ([]clients.Prop
 }
 
 // TODO: look at the logic again
-func filterSoftwareUpgradeProposals(proposals []clients.Proposal) []clients.Proposal {
-	var filtered []clients.Proposal
+func filterSoftwareUpgradeProposals(proposals []zetachain.Proposal) []zetachain.Proposal {
+	var filtered []zetachain.Proposal
 
 	for _, proposal := range proposals {
 		for _, message := range proposal.Messages {

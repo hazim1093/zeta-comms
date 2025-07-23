@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/hazim1093/zeta-comms/internal/clients"
 	"github.com/hazim1093/zeta-comms/internal/config"
 	"github.com/hazim1093/zeta-comms/internal/events"
+	"github.com/hazim1093/zeta-comms/pkg/zetachain"
 	"github.com/rs/zerolog"
 )
 
@@ -71,7 +71,7 @@ func processProposalUpdates(updateCh <-chan events.ProposalUpdate, log *zerolog.
 }
 
 // handleProposal processes a single proposal
-func handleProposal(proposal clients.Proposal, log *zerolog.Logger) {
+func handleProposal(proposal zetachain.Proposal, log *zerolog.Logger) {
 	log.Info().
 		Str("id", proposal.ProposalId).
 		Str("title", proposal.Title).

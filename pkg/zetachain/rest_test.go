@@ -1,4 +1,4 @@
-package clients
+package zetachain
 
 import (
 	"encoding/json"
