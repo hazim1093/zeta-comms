@@ -5,17 +5,14 @@ import (
 
 	"github.com/hazim1093/zeta-comms/internal/config"
 	"github.com/hazim1093/zeta-comms/pkg/discord"
+	"github.com/hazim1093/zeta-comms/pkg/models"
 	"github.com/hazim1093/zeta-comms/pkg/slack"
 	"github.com/hazim1093/zeta-comms/pkg/telegram"
 	"github.com/rs/zerolog"
 )
 
-type Notification struct {
-	Title          string `json:"title"`
-	Message        string `json:"message"`
-	ProposalId     string `json:"proposal_id"`
-	ProposalStatus string `json:"proposal_status"`
-}
+// Use the Notification type from the models package
+type Notification = models.Notification
 
 type NotificationService struct {
 	config   *config.Config
@@ -67,7 +64,7 @@ func (n *NotificationService) Notify(notification Notification, audience string)
 	log.Info().
 		Str("id", notification.ProposalId).
 		Str("title", notification.Title).
-		Str("status", notification.ProposalStatus).
+		Str("status", notification.Status).
 		Msg("Processing proposal")
 
 	audienceConfig, ok := n.config.AudienceConfig[audience]
@@ -93,12 +90,7 @@ func (n *NotificationService) sendSlackNotification(webhook string, notification
 	n.log.Debug().Msg("Sending Slack notification to webhook")
 
 	// Format the notification into a Slack message
-	message := slack.FormatProposalMessage(
-		notification.Title,
-		notification.Message,
-		notification.ProposalId,
-		notification.ProposalStatus,
-	)
+	message := slack.FormatProposalMessage(notification)
 
 	// Send the message to the Slack webhook
 	err := n.Slack.SendWebhookMessage(webhook, message)
@@ -125,12 +117,7 @@ func (n *NotificationService) sendDiscordNotification(channelID string, notifica
 	n.log.Debug().Msg("Sending Discord notification to channel: " + channelID)
 
 	// Format the notification into a Discord message
-	embed := discord.FormatProposalMessage(
-		notification.Title,
-		notification.Message,
-		notification.ProposalId,
-		notification.ProposalStatus,
-	)
+	embed := discord.FormatProposalMessage(notification)
 
 	// Create a simple content message
 	content := fmt.Sprintf("New proposal update: %s", notification.Title)
@@ -160,12 +147,7 @@ func (n *NotificationService) sendTelegramNotification(chatID string, notificati
 	n.log.Debug().Msg("Sending Telegram notification to chat: " + chatID)
 
 	// Format the notification into a Telegram message
-	message := telegram.FormatProposalMessage(
-		notification.Title,
-		notification.Message,
-		notification.ProposalId,
-		notification.ProposalStatus,
-	)
+	message := telegram.FormatProposalMessage(notification)
 
 	// Send the message to the Telegram chat
 	err := n.Telegram.SendMessage(chatID, message, "Markdown")

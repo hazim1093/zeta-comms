@@ -11,8 +11,8 @@ telegram:
 
 networks:
   mainnet:
-    api_url: https://mainneturl.com
-    poll_interval: 1m
+    api_url: https://zetachain.blockpi.network/lcd/v1/public
+    poll_interval: 10s
     audiences: # Should match the keys in audience_config
     - mainnet_operators
     - testnet_operators

@@ -28,17 +28,48 @@ type ProposalsResponse struct {
 }
 
 type Proposal struct {
-	ProposalId string    `json:"id"`
-	Status     string    `json:"status"`
-	Title      string    `json:"title"`
-	Summary    string    `json:"summary"`
-	Messages   []Message `json:"messages"`
+	ProposalId       string            `json:"id"`
+	Status           string            `json:"status"`
+	Title            string            `json:"title"`
+	Summary          string            `json:"summary"`
+	Messages         []Message         `json:"messages"`
+	FinalTallyResult TallyResult       `json:"final_tally_result"`
+	SubmitTime       time.Time         `json:"submit_time"`
+	DepositEndTime   time.Time         `json:"deposit_end_time"`
+	VotingStartTime  time.Time         `json:"voting_start_time"`
+	VotingEndTime    time.Time         `json:"voting_end_time"`
+	TotalDeposit     []Deposit         `json:"total_deposit"`
+	Metadata         string            `json:"metadata"`
+	FailedReason     string            `json:"failed_reason,omitempty"`
+	Expedited        bool              `json:"expedited"`
+}
+
+type TallyResult struct {
+	YesCount        string `json:"yes_count"`
+	NoCount         string `json:"no_count"`
+	AbstainCount    string `json:"abstain_count"`
+	NoWithVetoCount string `json:"no_with_veto_count"`
+}
+
+type Deposit struct {
+	Denom  string `json:"denom"`
+	Amount string `json:"amount"`
 }
 
 type Message struct {
-	Type string    `json:"@type"`
-	Name string    `json:"name,omitempty"`
-	Time time.Time `json:"time,omitempty"`
+	Type string      `json:"@type"`
+	Data MessageData `json:",inline"`
+}
+
+type MessageData struct {
+	Authority string    `json:"authority,omitempty"`
+	Plan      UpgradePlan `json:"plan,omitempty"`
+}
+
+type UpgradePlan struct {
+	Name   string `json:"name"`
+	Height string `json:"height"`
+	Info   string `json:"info"`
 }
 
 func NewRESTClient(cfg *config.Config, logger *zerolog.Logger) *RESTClient {

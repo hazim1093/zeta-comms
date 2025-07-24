@@ -45,12 +45,21 @@ func main() {
 func startZetaComms(ctx context.Context, cfg *config.Config, log *zerolog.Logger) {
 	// Start the governance service and get the proposal update channel
 	govService := events.NewGovService(cfg, log)
-
-	testnetUpdateChannel := govService.StartPollingProposals(ctx, "testnet")
-
-	// Process proposal updates in a separate goroutine
 	commsEngine := comms.NewCommsEngine(cfg, log)
-	go commsEngine.ProcessProposalUpdates("testnet", testnetUpdateChannel)
+
+	networks := cfg.Networks
+	for network := range networks {
+		log.Info().Msgf("Starting polling for network: %s", network)
+		proposalsChannel := govService.StartPollingProposals(ctx, network)
+		if proposalsChannel == nil {
+			log.Error().Msgf("Failed to start polling for network: %s", network)
+			continue
+		}
+
+		go commsEngine.ProcessProposalUpdates(network, proposalsChannel)
+
+		log.Info().Msgf("Polling started for network: %s", network)
+	}
 }
 
 func InitLogger(logFormat string, globalLevel string) zerolog.Logger {
