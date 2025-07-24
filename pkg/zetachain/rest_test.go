@@ -32,7 +32,7 @@ type mockRESTClient struct {
 func NewMockRESTClient(server *httptest.Server) *mockRESTClient {
 	return &mockRESTClient{
 		server:      server,
-		restyClient: resty.New().SetHostURL(server.URL),
+		restyClient: resty.New().SetBaseURL(server.URL),
 	}
 }
 
@@ -102,7 +102,11 @@ func TestGetProposals(t *testing.T) {
 
 		// Return the mock response
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResponse)
+		err := json.NewEncoder(w).Encode(mockResponse)
+		if err != nil {
+			t.Fatalf("Failed to encode mock response: %v", err)
+		}
+
 	}))
 	defer mockServer.Close()
 
