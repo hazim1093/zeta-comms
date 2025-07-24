@@ -23,6 +23,10 @@ type Config struct {
 		BotToken string `mapstructure:"bot_token"`
 	} `mapstructure:"discord"`
 
+	Telegram struct {
+		BotToken string `mapstructure:"bot_token"`
+	} `mapstructure:"telegram"`
+
 	Networks map[string]struct {
 		ApiUrl       url.URL       `mapstructure:"api_url"`
 		PollInterval time.Duration `mapstructure:"poll_interval"`

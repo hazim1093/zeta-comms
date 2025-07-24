@@ -1,10 +1,13 @@
 
 logging:
-  level: trace
+  level: info # trace, debug, info, warn, error
   format: console # console/text or json
 
 discord:
   bot_token: "${DISCORD_BOT_TOKEN}" # Use environment variable for security
+
+telegram:
+  bot_token: "${TELEGRAM_BOT_TOKEN}" # Use environment variable for security
 
 networks:
   mainnet:
@@ -27,18 +30,18 @@ audience_config:
       discord:
       - "123456789012345678" # Discord channel ID for mainnet
       slack:
-      - https://slack.com/mainnet-webhook
+      - https://hooks.slack.com/mainnet-webhook
       telegram:
-      - channel2
-      - channel3
+      - "-1001234567890" # zetachain-mainnet-notifs channel
   testnet_operators:
     channels:
       discord:
-      - "1397738539202117712" # Discord channel ID for testnet
+      - "123456789012345678" # Discord channel ID for testnet
       slack:
-      - https://slack.com/testnet
+      - https://hooks.slack.com/testnet-webhook
       telegram:
-      - https://t.me/testnet
+      - "-1001234567890" # zetachain-testnet-operators group
+      - "-1001234567890" # zetachain-testnet-notifs channel
 
 storage:
   filename: file-db.yaml
