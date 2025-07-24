@@ -28,7 +28,6 @@ func NewNotificationService(cfg *config.Config, log *zerolog.Logger) *Notificati
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create Discord client")
 	} else {
-		// Connect to Discord
 		err = discordClient.Connect()
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to connect to Discord")
@@ -42,7 +41,6 @@ func NewNotificationService(cfg *config.Config, log *zerolog.Logger) *Notificati
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create Telegram client")
 	} else {
-		// Connect to Telegram
 		err = telegramClient.Connect()
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to connect to Telegram")
@@ -61,12 +59,6 @@ func NewNotificationService(cfg *config.Config, log *zerolog.Logger) *Notificati
 func (n *NotificationService) Notify(notification Notification, audience string) {
 	log := n.log.With().Str("audience", audience).Logger()
 
-	log.Info().
-		Str("id", notification.ProposalId).
-		Str("title", notification.Title).
-		Str("status", notification.Status).
-		Msg("Processing proposal")
-
 	audienceConfig, ok := n.config.AudienceConfig[audience]
 	if !ok {
 		log.Error().Msg("No audience config found")
@@ -76,24 +68,34 @@ func (n *NotificationService) Notify(notification Notification, audience string)
 
 	for _, channelID := range audienceConfig.Channels.Discord {
 		n.sendDiscordNotification(channelID, notification)
+
+		log.Info().
+			Str("proposal_id", notification.ProposalId).
+			Msg("Discord notification sent successfully")
 	}
 
 	for _, webhook := range audienceConfig.Channels.Slack {
 		n.sendSlackNotification(webhook, notification)
+
+		log.Info().
+			Str("proposal_id", notification.ProposalId).
+			Msg("Slack notification sent successfully")
 	}
 
 	for _, chatID := range audienceConfig.Channels.Telegram {
 		n.sendTelegramNotification(chatID, notification)
+
+		log.Info().
+			Str("proposal_id", notification.ProposalId).
+			Msg("Telegram notification sent successfully")
 	}
 }
 
 func (n *NotificationService) sendSlackNotification(webhook string, notification Notification) {
 	n.log.Debug().Msg("Sending Slack notification to webhook")
 
-	// Format the notification into a Slack message
 	message := slack.FormatProposalMessage(notification)
 
-	// Send the message to the Slack webhook
 	err := n.Slack.SendWebhookMessage(webhook, message)
 	if err != nil {
 		n.log.Error().
@@ -104,10 +106,6 @@ func (n *NotificationService) sendSlackNotification(webhook string, notification
 
 		return
 	}
-
-	n.log.Info().
-		Str("proposal_id", notification.ProposalId).
-		Msg("Slack notification sent successfully")
 }
 
 func (n *NotificationService) sendDiscordNotification(channelID string, notification Notification) {
@@ -119,13 +117,9 @@ func (n *NotificationService) sendDiscordNotification(channelID string, notifica
 
 	n.log.Debug().Msg("Sending Discord notification to channel: " + channelID)
 
-	// Format the notification into a Discord message
 	embed := discord.FormatProposalMessage(notification)
-
-	// Create a simple content message
 	content := fmt.Sprintf("New proposal update: %s", notification.Title)
 
-	// Send the message to the Discord channel
 	err := n.Discord.SendChannelMessage(channelID, content, embed)
 	if err != nil {
 		n.log.Error().
@@ -136,10 +130,6 @@ func (n *NotificationService) sendDiscordNotification(channelID string, notifica
 
 		return
 	}
-
-	n.log.Info().
-		Str("proposal_id", notification.ProposalId).
-		Msg("Discord notification sent successfully")
 }
 
 func (n *NotificationService) sendTelegramNotification(chatID string, notification Notification) {
@@ -151,10 +141,8 @@ func (n *NotificationService) sendTelegramNotification(chatID string, notificati
 
 	n.log.Debug().Msg("Sending Telegram notification to chat: " + chatID)
 
-	// Format the notification into a Telegram message
 	message := telegram.FormatProposalMessage(notification)
 
-	// Send the message to the Telegram chat
 	err := n.Telegram.SendMessage(chatID, message, "Markdown")
 	if err != nil {
 		n.log.Error().
@@ -165,8 +153,4 @@ func (n *NotificationService) sendTelegramNotification(chatID string, notificati
 
 		return
 	}
-
-	n.log.Info().
-		Str("proposal_id", notification.ProposalId).
-		Msg("Telegram notification sent successfully")
 }

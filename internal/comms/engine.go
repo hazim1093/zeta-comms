@@ -9,7 +9,6 @@ import (
 	"github.com/hazim1093/zeta-comms/internal/storage"
 	"github.com/hazim1093/zeta-comms/pkg/zetachain"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 type CommsEngine struct {
@@ -31,7 +30,6 @@ func NewCommsEngine(cfg *config.Config, log *zerolog.Logger) *CommsEngine {
 // ProcessProposalUpdates handles the proposal updates from the channel
 func (e *CommsEngine) ProcessProposalUpdates(network string, updateCh <-chan events.ProposalUpdate) {
 	log := e.log.With().Str("network", network).Logger()
-	log.Trace().Msg("Starting to process proposal updates")
 
 	for update := range updateCh {
 		if update.Error != nil {
@@ -40,7 +38,6 @@ func (e *CommsEngine) ProcessProposalUpdates(network string, updateCh <-chan eve
 			continue
 		}
 
-		log.Info().Msgf("Received %d proposals", len(update.Proposals))
 		e.handleProposals(network, update.Proposals)
 	}
 
@@ -48,18 +45,18 @@ func (e *CommsEngine) ProcessProposalUpdates(network string, updateCh <-chan eve
 }
 
 func (e *CommsEngine) handleProposals(network string, proposals []zetachain.Proposal) {
-	e.log.Trace().Msgf("Handling %d proposals for network: %s", len(proposals), network)
+	log := e.log.With().Str("network", network).Logger()
+	log.Trace().Msgf("Handling %d proposals for network: %s", len(proposals), network)
 
 	for _, proposal := range proposals {
 		isNew := e.isNewProposal(network, proposal.ProposalId)
-
 		if !isNew {
-			e.log.Debug().Msgf("Proposal %s is not new", proposal.ProposalId)
+			log.Debug().Msgf("Proposal %s is not new", proposal.ProposalId)
 
 			continue
 		}
 
-		log.Info().Msgf("Processing new proposal: %s", proposal.ProposalId)
+		log.Info().Str("proposal_id", proposal.ProposalId).Msg("Processing new proposal")
 
 		notification := notifications.MapFromProposal(network, proposal)
 
@@ -70,6 +67,7 @@ func (e *CommsEngine) handleProposals(network string, proposals []zetachain.Prop
 
 		e.storeLastProcessedProposalID(network, proposal.ProposalId)
 	}
+
 }
 
 func (e *CommsEngine) isNewProposal(network string, proposalId string) bool {

@@ -31,7 +31,6 @@ func NewGovService(cfg *config.Config, logger *zerolog.Logger) *GovService {
 	}
 }
 
-// StartPollingProposals starts polling for software upgrade proposals and returns channels for updates and errors
 func (g *GovService) StartPollingProposals(ctx context.Context, network string) chan ProposalUpdate {
 	log := g.log.With().Str("network", network).Logger()
 	pollInterval := g.config.Networks[network].PollInterval
@@ -41,14 +40,13 @@ func (g *GovService) StartPollingProposals(ctx context.Context, network string) 
 	// Create a buffered channel to avoid blocking
 	updateCh := make(chan ProposalUpdate, 10)
 
-	go g.pollProposals(ctx, network, pollInterval, updateCh, &log)
-
-	log.Info().Msg("Polling started")
+	go g.pollProposals(ctx, network, pollInterval, updateCh)
 
 	return updateCh
 }
 
-func (g *GovService) pollProposals(ctx context.Context, network string, pollInterval time.Duration, updateCh chan ProposalUpdate, log *zerolog.Logger) {
+func (g *GovService) pollProposals(ctx context.Context, network string, pollInterval time.Duration, updateCh chan ProposalUpdate) {
+	log := g.log.With().Str("network", network).Logger()
 	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
 	defer close(updateCh)
@@ -69,6 +67,8 @@ func (g *GovService) pollProposals(ctx context.Context, network string, pollInte
 	for {
 		select {
 		case <-ticker.C:
+			log.Info().Msg("Polling for proposals ...")
+
 			proposals, err := g.getSoftwareUpgradeProposals(network)
 			if err != nil {
 				log.Error().Err(err).Msg("failed to get proposals")
