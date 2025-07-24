@@ -24,7 +24,7 @@ type NotificationService struct {
 
 func NewNotificationService(cfg *config.Config, log *zerolog.Logger) *NotificationService {
 	// Initialize Discord client
-	discordClient, err := discord.NewDiscordClient(log, cfg.Discord.BotToken)
+	discordClient, err := discord.NewDiscordClient(log, cfg.AuthConfig.Discord.BotToken)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create Discord client")
 	} else {
@@ -38,7 +38,7 @@ func NewNotificationService(cfg *config.Config, log *zerolog.Logger) *Notificati
 	}
 
 	// Initialize Telegram client
-	telegramClient, err := telegram.NewTelegramClient(log, cfg.Telegram.BotToken)
+	telegramClient, err := telegram.NewTelegramClient(log, cfg.AuthConfig.Telegram.BotToken)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create Telegram client")
 	} else {

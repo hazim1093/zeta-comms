@@ -207,10 +207,13 @@ go run main.go --config additional-config.yaml
 - [x] Slack integration
 - [x] Discord integration
 - [x] Telegram integration
-- [ ] Improved message formatting
-- [ ] update config , add bot tokens to single config and maybe split in structs?
+- [x] Improved message formatting
+- [x] Run for all networks
+- [x] update config , add bot tokens to single config and maybe split in structs?
 - [ ] Ask to refactor notifications to make it common
 - [ ] broadcast messages
 - [ ] Pagination for proposal fetching
 - [ ] Comprehensive tests
 - [ ] Docs
+- [x] loook at type MsgSoftwareUpgrade, in config or generic check
+- [ ] test upgrade by submtted proposal

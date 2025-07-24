@@ -1,14 +1,4 @@
 
-logging:
-  level: info # trace, debug, info, warn, error
-  format: console # console/text or json
-
-discord:
-  bot_token: "${DISCORD_BOT_TOKEN}" # Use environment variable for security
-
-telegram:
-  bot_token: "${TELEGRAM_BOT_TOKEN}" # Use environment variable for security
-
 networks:
   mainnet:
     api_url: https://zetachain.blockpi.network/lcd/v1/public
@@ -43,5 +33,22 @@ audience_config:
       - "-1001234567890" # zetachain-testnet-operators group
       - "-1001234567890" # zetachain-testnet-notifs channel
 
+events:
+  proposals:
+    filters:
+      message_types:
+      - "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade"
+      - "/cosmos.upgrade.v1beta1.MsgCancelUpgrade"
+
+auth_config:
+  discord:
+    bot_token: "${DISCORD_BOT_TOKEN}" # Use environment variable for security
+  telegram:
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+
 storage:
   filename: file-db.yaml
+
+logging:
+  level: info # trace, debug, info, warn, error
+  format: console # console/text or json

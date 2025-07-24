@@ -9,10 +9,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const (
-	SoftwareUpgradeProposalType = "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade"
-)
-
 type GovService struct {
 	restClient *zetachain.RESTClient
 	config     *config.Config
@@ -95,19 +91,20 @@ func (g *GovService) getSoftwareUpgradeProposals(network string) ([]zetachain.Pr
 		return nil, err
 	}
 
-	proposals := filterSoftwareUpgradeProposals(proposalsResp.Proposals)
+	proposals := g.filterProposals(proposalsResp.Proposals)
 	return proposals, nil
 }
 
-// TODO: look at the logic again
-func filterSoftwareUpgradeProposals(proposals []zetachain.Proposal) []zetachain.Proposal {
+func (g *GovService) filterProposals(proposals []zetachain.Proposal) []zetachain.Proposal {
 	var filtered []zetachain.Proposal
 
 	for _, proposal := range proposals {
 		for _, message := range proposal.Messages {
-			if message.Type == SoftwareUpgradeProposalType {
-				filtered = append(filtered, proposal)
-				break
+			for _, msgType := range g.config.Events.Proposals.Filters.MessageTypes {
+				if message.Type == msgType {
+					filtered = append(filtered, proposal)
+					break
+				}
 			}
 		}
 	}

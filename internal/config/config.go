@@ -14,19 +14,6 @@ import (
 )
 
 type Config struct {
-	Logging struct {
-		Format string
-		Level  string
-	}
-
-	Discord struct {
-		BotToken string `mapstructure:"bot_token"`
-	} `mapstructure:"discord"`
-
-	Telegram struct {
-		BotToken string `mapstructure:"bot_token"`
-	} `mapstructure:"telegram"`
-
 	Networks map[string]struct {
 		ApiUrl       url.URL       `mapstructure:"api_url"`
 		PollInterval time.Duration `mapstructure:"poll_interval"`
@@ -41,9 +28,32 @@ type Config struct {
 		} `mapstructure:"channels"`
 	} `mapstructure:"audience_config"`
 
+	Events struct {
+		Proposals struct {
+			Filters struct {
+				MessageTypes []string `mapstructure:"message_types"`
+			} `mapstructure:"filters"`
+		} `mapstructure:"proposals"`
+	} `mapstructure:"events"`
+
+	AuthConfig struct {
+		Discord struct {
+			BotToken string `mapstructure:"bot_token"`
+		} `mapstructure:"discord"`
+
+		Telegram struct {
+			BotToken string `mapstructure:"bot_token"`
+		} `mapstructure:"telegram"`
+	} `mapstructure:"auth_config"`
+
 	Storage struct {
 		Filename string `mapstructure:"filename"`
 	} `mapstructure:"storage"`
+
+	Logging struct {
+		Format string
+		Level  string
+	}
 }
 
 func InitConfig() (*Config, error) {

@@ -52,10 +52,11 @@ func mapProposalToNotification(network string, proposal zetachain.Proposal) mode
 	// Extract upgrade information if available
 	var upgradeName, targetHeight string
 	for _, msg := range proposal.Messages {
-		if msg.Type == "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade" && msg.Data.Plan.Name != "" {
+		if msg.Data.Plan.Name != "" {
 			upgradeName = msg.Data.Plan.Name
+		}
+		if msg.Data.Plan.Height != "" {
 			targetHeight = msg.Data.Plan.Height
-			break
 		}
 	}
 
