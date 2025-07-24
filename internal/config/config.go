@@ -19,6 +19,10 @@ type Config struct {
 		Level  string
 	}
 
+	Discord struct {
+		BotToken string `mapstructure:"bot_token"`
+	} `mapstructure:"discord"`
+
 	Networks map[string]struct {
 		ApiUrl       url.URL       `mapstructure:"api_url"`
 		PollInterval time.Duration `mapstructure:"poll_interval"`

@@ -52,7 +52,7 @@ func (e *CommsEngine) handleProposals(network string, proposals []zetachain.Prop
 
 		if !isNew {
 			e.log.Debug().Msgf("Proposal %s is not new", proposal.ProposalId)
-			return
+			continue
 		}
 
 		audiences := e.config.Networks[network].Audiences

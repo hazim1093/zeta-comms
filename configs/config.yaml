@@ -1,7 +1,10 @@
 
 logging:
-  level: info
+  level: trace
   format: console # console/text or json
+
+discord:
+  bot_token: "${DISCORD_BOT_TOKEN}" # Use environment variable for security
 
 networks:
   mainnet:
@@ -22,7 +25,7 @@ audience_config:
   mainnet_operators:
     channels:
       discord:
-      - channel1
+      - "123456789012345678" # Discord channel ID for mainnet
       slack:
       - https://slack.com/mainnet-webhook
       telegram:
@@ -31,7 +34,7 @@ audience_config:
   testnet_operators:
     channels:
       discord:
-      - https://discord.gg/testnet
+      - "1397738539202117712" # Discord channel ID for testnet
       slack:
       - https://slack.com/testnet
       telegram:

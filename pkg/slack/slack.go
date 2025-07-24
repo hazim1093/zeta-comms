@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/hazim1093/zeta-comms/internal/config"
 	"github.com/rs/zerolog"
 )
 
@@ -38,16 +37,14 @@ type Attachment struct {
 }
 
 type SlackClient struct {
-	config *config.Config
-	log    *zerolog.Logger
+	log *zerolog.Logger
 }
 
-func NewSlackClient(cfg *config.Config, logger *zerolog.Logger) *SlackClient {
+func NewSlackClient(logger *zerolog.Logger) *SlackClient {
 	log := logger.With().Str("service", "slackClient").Logger()
 
 	return &SlackClient{
-		config: cfg,
-		log:    &log,
+		log: &log,
 	}
 }
 

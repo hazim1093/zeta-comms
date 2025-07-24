@@ -1,7 +1,10 @@
 package comms
 
 import (
+	"fmt"
+
 	"github.com/hazim1093/zeta-comms/internal/config"
+	"github.com/hazim1093/zeta-comms/pkg/discord"
 	"github.com/hazim1093/zeta-comms/pkg/slack"
 	"github.com/rs/zerolog"
 )
@@ -14,16 +17,31 @@ type Notification struct {
 }
 
 type NotificationService struct {
-	config *config.Config
-	log    *zerolog.Logger
-	Slack  *slack.SlackClient
+	config  *config.Config
+	log     *zerolog.Logger
+	Slack   *slack.SlackClient
+	Discord *discord.DiscordClient
 }
 
 func NewNotificationService(cfg *config.Config, log *zerolog.Logger) *NotificationService {
+	discordClient, err := discord.NewDiscordClient(log, cfg.Discord.BotToken)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create Discord client")
+	} else {
+		// Connect to Discord
+		err = discordClient.Connect()
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to connect to Discord")
+		} else {
+			discordClient.AddReconnectHandler()
+		}
+	}
+
 	return &NotificationService{
-		config: cfg,
-		log:    log,
-		Slack:  slack.NewSlackClient(cfg, log),
+		config:  cfg,
+		log:     log,
+		Slack:   slack.NewSlackClient(log),
+		Discord: discordClient,
 	}
 }
 
@@ -43,9 +61,8 @@ func (n *NotificationService) Notify(notification Notification, audience string)
 		return
 	}
 
-	for _, channel := range audienceConfig.Channels.Discord {
-		log.Info().Msg("Sending Discord notification: " + channel)
-		//go sendDiscordNotification(channel, notification)
+	for _, channelID := range audienceConfig.Channels.Discord {
+		n.sendDiscordNotification(channelID, notification)
 	}
 
 	for _, webhook := range audienceConfig.Channels.Slack {
@@ -83,4 +100,39 @@ func (n *NotificationService) sendSlackNotification(webhook string, notification
 	n.log.Info().
 		Str("proposal_id", notification.ProposalId).
 		Msg("Slack notification sent successfully")
+}
+
+func (n *NotificationService) sendDiscordNotification(channelID string, notification Notification) {
+	if n.Discord == nil {
+		n.log.Warn().Msg("Discord client not initialized")
+		return
+	}
+
+	n.log.Debug().Msg("Sending Discord notification")
+
+	// Format the notification into a Discord message
+	embed := discord.FormatProposalMessage(
+		notification.Title,
+		notification.Message,
+		notification.ProposalId,
+		notification.ProposalStatus,
+	)
+
+	// Create a simple content message
+	content := fmt.Sprintf("New proposal update: %s", notification.Title)
+
+	// Send the message to the Discord channel
+	err := n.Discord.SendChannelMessage(channelID, content, embed)
+	if err != nil {
+		n.log.Error().
+			Err(err).
+			Str("channel_id", channelID).
+			Str("proposal_id", notification.ProposalId).
+			Msg("Failed to send Discord notification")
+		return
+	}
+
+	n.log.Info().
+		Str("proposal_id", notification.ProposalId).
+		Msg("Discord notification sent successfully")
 }

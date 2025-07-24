@@ -3,11 +3,17 @@ module github.com/hazim1093/zeta-comms
 go 1.24.5
 
 require (
+	github.com/bwmarrin/discordgo v0.29.0
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.20.1
+)
+
+require (
+	github.com/gorilla/websocket v1.4.2 // indirect
+	golang.org/x/crypto v0.40.0 // indirect
 )
 
 require (
