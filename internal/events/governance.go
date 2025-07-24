@@ -2,6 +2,7 @@ package events
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/hazim1093/zeta-comms/internal/config"
@@ -47,9 +48,11 @@ func (g *GovService) StartPollingProposals(ctx context.Context, network string) 
 
 func (g *GovService) pollProposals(ctx context.Context, network string, pollInterval time.Duration, updateCh chan ProposalUpdate) {
 	log := g.log.With().Str("network", network).Logger()
+
+	defer close(updateCh)
+
 	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
-	defer close(updateCh)
 
 	// Initial fetch
 	proposals, err := g.getSoftwareUpgradeProposals(network)
@@ -104,12 +107,8 @@ func (g *GovService) filterProposals(proposals []zetachain.Proposal) []zetachain
 
 	for _, proposal := range proposals {
 		for _, message := range proposal.Messages {
-			for _, msgType := range g.config.Events.Proposals.Filters.MessageTypes {
-				if message.Type == msgType {
-					filtered = append(filtered, proposal)
-
-					break
-				}
+			if slices.Contains(g.config.Events.Proposals.Filters.MessageTypes, message.Type) {
+				filtered = append(filtered, proposal)
 			}
 		}
 	}

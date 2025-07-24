@@ -67,7 +67,6 @@ func (e *CommsEngine) handleProposals(network string, proposals []zetachain.Prop
 
 		e.storeLastProcessedProposalID(network, proposal.ProposalId)
 	}
-
 }
 
 func (e *CommsEngine) isNewProposal(network string, proposalId string) bool {
