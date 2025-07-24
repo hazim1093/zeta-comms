@@ -102,12 +102,13 @@ func TestGetProposals(t *testing.T) {
 
 		// Return the mock response
 		w.Header().Set("Content-Type", "application/json")
+
 		err := json.NewEncoder(w).Encode(mockResponse)
 		if err != nil {
 			t.Fatalf("Failed to encode mock response: %v", err)
 		}
-
 	}))
+
 	defer mockServer.Close()
 
 	// Create a mock client that uses the mock server
@@ -171,6 +172,7 @@ func TestGetProposals(t *testing.T) {
 
 	// Print information for verification
 	fmt.Printf("Successfully retrieved %d proposals from mock server\n", len(response.Proposals))
+
 	for i, proposal := range response.Proposals {
 		fmt.Printf("Proposal %d: ID=%s, Status=%s, Title=%s\n",
 			i+1, proposal.ProposalId, proposal.Status, proposal.Title)

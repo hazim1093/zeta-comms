@@ -33,12 +33,12 @@ func main() {
 	//----------------------------------------
 	startZetaComms(ctx, cfg, &log)
 	//----------------------------------------
+
 	// Wait for termination signal
 	sig := <-sigCh
 	log.Info().Msgf("Received signal %v, shutting down...", sig)
 	cancel() // This will propagate cancellation to the polling goroutine
 
-	// Allow some time for cleanup
 	log.Info().Msg("Shutdown complete")
 }
 
@@ -50,9 +50,11 @@ func startZetaComms(ctx context.Context, cfg *config.Config, log *zerolog.Logger
 	networks := cfg.Networks
 	for network := range networks {
 		log.Info().Msgf("Starting polling for network: %s", network)
+
 		proposalsChannel := govService.StartPollingProposals(ctx, network)
 		if proposalsChannel == nil {
 			log.Error().Msgf("Failed to start polling for network: %s", network)
+
 			continue
 		}
 

@@ -1,4 +1,4 @@
-package comms
+package notifications
 
 import (
 	"fmt"
@@ -70,6 +70,7 @@ func (n *NotificationService) Notify(notification Notification, audience string)
 	audienceConfig, ok := n.config.AudienceConfig[audience]
 	if !ok {
 		log.Error().Msg("No audience config found")
+
 		return
 	}
 
@@ -100,6 +101,7 @@ func (n *NotificationService) sendSlackNotification(webhook string, notification
 			Str("webhook", webhook).
 			Str("proposal_id", notification.ProposalId).
 			Msg("Failed to send Slack notification")
+
 		return
 	}
 
@@ -111,6 +113,7 @@ func (n *NotificationService) sendSlackNotification(webhook string, notification
 func (n *NotificationService) sendDiscordNotification(channelID string, notification Notification) {
 	if n.Discord == nil {
 		n.log.Warn().Msg("Discord client not initialized")
+
 		return
 	}
 
@@ -130,6 +133,7 @@ func (n *NotificationService) sendDiscordNotification(channelID string, notifica
 			Str("channel_id", channelID).
 			Str("proposal_id", notification.ProposalId).
 			Msg("Failed to send Discord notification")
+
 		return
 	}
 
@@ -141,6 +145,7 @@ func (n *NotificationService) sendDiscordNotification(channelID string, notifica
 func (n *NotificationService) sendTelegramNotification(chatID string, notification Notification) {
 	if n.Telegram == nil {
 		n.log.Warn().Msg("Telegram client not initialized")
+
 		return
 	}
 
@@ -157,6 +162,7 @@ func (n *NotificationService) sendTelegramNotification(chatID string, notificati
 			Str("chat_id", chatID).
 			Str("proposal_id", notification.ProposalId).
 			Msg("Failed to send Telegram notification")
+
 		return
 	}
 

@@ -44,6 +44,7 @@ func (g *GovService) StartPollingProposals(ctx context.Context, network string) 
 	go g.pollProposals(ctx, network, pollInterval, updateCh, &log)
 
 	log.Info().Msg("Polling started")
+
 	return updateCh
 }
 
@@ -79,6 +80,7 @@ func (g *GovService) pollProposals(ctx context.Context, network string, pollInte
 
 		case <-ctx.Done():
 			log.Info().Msg("Stopping proposal polling due to context cancellation")
+
 			return
 		}
 	}
@@ -88,10 +90,12 @@ func (g *GovService) getSoftwareUpgradeProposals(network string) ([]zetachain.Pr
 	proposalsResp, err := g.restClient.GetProposals(network)
 	if err != nil {
 		g.log.Error().Err(err).Msg("failed to get proposals")
+
 		return nil, err
 	}
 
 	proposals := g.filterProposals(proposalsResp.Proposals)
+
 	return proposals, nil
 }
 
@@ -103,6 +107,7 @@ func (g *GovService) filterProposals(proposals []zetachain.Proposal) []zetachain
 			for _, msgType := range g.config.Events.Proposals.Filters.MessageTypes {
 				if message.Type == msgType {
 					filtered = append(filtered, proposal)
+
 					break
 				}
 			}

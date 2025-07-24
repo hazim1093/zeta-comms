@@ -58,7 +58,6 @@ func (s *StorageService) StoreLastProcessedProposalID(network string, proposalID
 }
 
 func (s *StorageService) GetLastProcessedProposalID(network string) (string, error) {
-
 	data, err := loadYamlFile(s.config.Storage.Filename)
 	if err != nil {
 		// If file doesn't exist, create new data
@@ -81,6 +80,7 @@ func saveYamlFile(filename string, data Data) error {
 	if err != nil {
 		return err
 	}
+
 	return os.WriteFile(filename, yamlData, 0644)
 }
 
@@ -89,10 +89,13 @@ func loadYamlFile(filename string) (Data, error) {
 	if err != nil {
 		return Data{}, err
 	}
+
 	var data Data
+
 	err = yaml.Unmarshal(fileData, &data)
 	if err != nil {
 		return Data{}, err
 	}
+
 	return data, nil
 }

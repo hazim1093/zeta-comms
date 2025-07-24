@@ -113,12 +113,13 @@ func FormatProposalMessage(notification models.Notification) Message {
 		for _, deposit := range notification.TotalDeposit {
 			messageContent += fmt.Sprintf("• %s %s\n", deposit.Amount, deposit.Denom)
 		}
+
 		messageContent += "\n"
 	}
 
 	// Add voting results using the common formatter
 	// Format the voting results section
-	messageContent = "*Voting Results:*\n"
+	messageContent += "*Voting Results:*\n"
 
 	if notification.TotalVotes != "" {
 		messageContent += fmt.Sprintf("• Yes: %s\n", notification.YesVotes)
@@ -137,6 +138,7 @@ func FormatProposalMessage(notification models.Notification) Message {
 	if !notification.SubmitTime.IsZero() {
 		messageContent += fmt.Sprintf("*Submitted:* %s\n", notification.SubmitTime.Format(time.RFC1123))
 	}
+
 	if !notification.VotingEndTime.IsZero() {
 		messageContent += fmt.Sprintf("*Voting Ends:* %s\n", notification.VotingEndTime.Format(time.RFC1123))
 	}

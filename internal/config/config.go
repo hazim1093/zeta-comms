@@ -83,6 +83,7 @@ func InitConfig() (*Config, error) {
 		// Split comma-separated list of config files
 		for _, configFile := range strings.Split(configFiles, ",") {
 			v.SetConfigFile(configFile)
+
 			if err := v.MergeInConfig(); err != nil {
 				return nil, fmt.Errorf("error merging config file %s: %w", configFile, err)
 			}
@@ -100,6 +101,7 @@ func InitConfig() (*Config, error) {
 	if err := v.Unmarshal(&cfg, viper.DecodeHook(decodeHooks)); err != nil {
 		return nil, fmt.Errorf("error un-marshalling config: %w", err)
 	}
+
 	return &cfg, nil
 }
 
@@ -113,6 +115,7 @@ func stringToURLHookFunc() mapstructure.DecodeHookFunc {
 		if f.Kind() != reflect.String {
 			return data, nil
 		}
+
 		if t != reflect.TypeOf(url.URL{}) {
 			return data, nil
 		}
@@ -126,6 +129,7 @@ func stringToURLHookFunc() mapstructure.DecodeHookFunc {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse URL: %w", err)
 		}
+
 		return *u, nil
 	}
 }
@@ -154,6 +158,7 @@ func envVarInterpolationHookFunc() mapstructure.DecodeHookFunc {
 				// Return the original ${VAR} if environment variable doesn't exist
 				return "${" + key + "}"
 			}
+
 			return value
 		})
 

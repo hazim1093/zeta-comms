@@ -46,17 +46,21 @@ func (c *DiscordClient) Connect() error {
 	user, err := c.session.User("@me")
 	if err != nil {
 		c.session.Close()
+
 		return fmt.Errorf("error getting bot user: %w", err)
 	}
+
 	c.botID = user.ID
 
 	c.log.Info().Str("bot_id", c.botID).Msg("Connected to Discord")
+
 	return nil
 }
 
 // Close closes the Discord connection
 func (c *DiscordClient) Close() error {
 	c.log.Info().Msg("Closing Discord connection")
+
 	return c.session.Close()
 }
 
@@ -69,6 +73,7 @@ func (c *DiscordClient) SendChannelMessage(channelID string, content string, emb
 	if err != nil {
 		return fmt.Errorf("error sending message to Discord channel: %w", err)
 	}
+
 	return nil
 }
 
@@ -103,6 +108,7 @@ func FormatProposalMessage(notification models.Notification) *discordgo.MessageE
 		for _, deposit := range notification.TotalDeposit {
 			description += fmt.Sprintf("• %s %s\n", deposit.Amount, deposit.Denom)
 		}
+
 		description += "\n"
 	}
 
@@ -124,6 +130,7 @@ func FormatProposalMessage(notification models.Notification) *discordgo.MessageE
 	if !notification.SubmitTime.IsZero() {
 		description += fmt.Sprintf("**Submitted:** %s\n", notification.SubmitTime.Format(time.RFC1123))
 	}
+
 	if !notification.VotingEndTime.IsZero() {
 		description += fmt.Sprintf("**Voting Ends:** %s\n", notification.VotingEndTime.Format(time.RFC1123))
 	}

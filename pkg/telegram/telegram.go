@@ -40,6 +40,7 @@ func (c *TelegramClient) Connect() error {
 		Str("bot_username", c.bot.Self.UserName).
 		Bool("is_bot", c.bot.Self.IsBot).
 		Msg("Connected to Telegram")
+
 	return nil
 }
 
@@ -88,6 +89,7 @@ func FormatProposalMessage(notification models.Notification) string {
 		for _, deposit := range notification.TotalDeposit {
 			formattedMessage += fmt.Sprintf("• %s %s\n", deposit.Amount, deposit.Denom)
 		}
+
 		formattedMessage += "\n"
 	}
 
@@ -109,6 +111,7 @@ func FormatProposalMessage(notification models.Notification) string {
 	if !notification.SubmitTime.IsZero() {
 		formattedMessage += fmt.Sprintf("*Submitted:* %s\n", notification.SubmitTime.Format(time.RFC1123))
 	}
+
 	if !notification.VotingEndTime.IsZero() {
 		formattedMessage += fmt.Sprintf("*Voting Ends:* %s\n", notification.VotingEndTime.Format(time.RFC1123))
 	}
@@ -175,7 +178,8 @@ func (c *TelegramClient) StartPolling() {
 					Str("text", update.Message.Text).
 					Msg("Received message")
 
-				// Here you can add command handling if needed
+				//TODO: Here you can add command handling if needed
+				c.log.Info().Msg("Handling message from user")
 			}
 		}
 	}()
