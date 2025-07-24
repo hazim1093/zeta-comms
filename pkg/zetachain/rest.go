@@ -64,9 +64,7 @@ func (r *RESTClient) GetProposals(network string) (*ProposalsResponse, error) {
 	var response ProposalsResponse
 	resp, err := r.restyClient.R().
 		SetResult(&response).
-		SetQueryParams(map[string]string{
-			"pagination.reverse": "true",
-		}).
+		SetQueryParams(map[string]string{}).
 		Get(networkURL.ApiUrl.String() + proposalsPath)
 
 	if err != nil {

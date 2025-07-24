@@ -36,3 +36,6 @@ audience_config:
       - https://slack.com/testnet
       telegram:
       - https://t.me/testnet
+
+storage:
+  filename: file-db.yaml

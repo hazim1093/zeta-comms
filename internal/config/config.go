@@ -32,6 +32,10 @@ type Config struct {
 			Slack    []string `mapstructure:"slack"`
 		} `mapstructure:"channels"`
 	} `mapstructure:"audience_config"`
+
+	Storage struct {
+		Filename string `mapstructure:"filename"`
+	} `mapstructure:"storage"`
 }
 
 func InitConfig() (*Config, error) {

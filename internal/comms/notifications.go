@@ -1,8 +1,6 @@
 package comms
 
 import (
-	"fmt"
-
 	"github.com/hazim1093/zeta-comms/internal/config"
 	"github.com/hazim1093/zeta-comms/pkg/slack"
 	"github.com/rs/zerolog"
@@ -39,18 +37,6 @@ func (n *NotificationService) Notify(notification Notification, audience string)
 		Str("status", notification.ProposalStatus).
 		Msg("Processing proposal")
 
-	switch notification.ProposalStatus {
-	case "PROPOSAL_STATUS_VOTING_PERIOD":
-		// Alert that voting is open
-		fmt.Printf("ALERT: Proposal %s is open for voting\n", notification.ProposalId)
-	case "PROPOSAL_STATUS_PASSED":
-		// Prepare for the upgrade
-		fmt.Printf("ALERT: Proposal %s has passed - prepare for upgrade\n", notification.ProposalId)
-	case "PROPOSAL_STATUS_REJECTED":
-		// Log the rejection
-		fmt.Printf("INFO: Proposal %s was rejected\n", notification.ProposalId)
-	}
-
 	audienceConfig, ok := n.config.AudienceConfig[audience]
 	if !ok {
 		log.Warn().Str("audience", audience).Msg("No audience config found")
@@ -61,9 +47,11 @@ func (n *NotificationService) Notify(notification Notification, audience string)
 		log.Info().Msg("Sending Discord notification: " + channel)
 		//go sendDiscordNotification(channel, notification)
 	}
+
 	for _, webhook := range audienceConfig.Channels.Slack {
-		go n.sendSlackNotification(webhook, notification)
+		n.sendSlackNotification(webhook, notification)
 	}
+
 	for _, channel := range audienceConfig.Channels.Telegram {
 		log.Info().Msg("Sending Telegram notification: " + channel)
 		//go sendTelegramNotification(channel, notification)
@@ -71,7 +59,7 @@ func (n *NotificationService) Notify(notification Notification, audience string)
 }
 
 func (n *NotificationService) sendSlackNotification(webhook string, notification Notification) {
-	n.log.Info().Msg("Sending Slack notification")
+	n.log.Debug().Msg("Sending Slack notification")
 
 	// Format the notification into a Slack message
 	message := slack.FormatProposalMessage(
