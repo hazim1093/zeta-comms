@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hazim1093/zeta-comms/pkg/models"
+	"github.com/hazim1093/zeta-comms/pkg/notifiers"
 	"github.com/rs/zerolog"
 )
 
@@ -40,6 +41,9 @@ type Attachment struct {
 type SlackClient struct {
 	log *zerolog.Logger
 }
+
+// Ensure SlackClient implements the notifier.Notifier interface
+var _ notifiers.Notifier = (*SlackClient)(nil)
 
 func NewSlackClient(logger *zerolog.Logger) *SlackClient {
 	log := logger.With().Str("service", "slackClient").Logger()
@@ -83,8 +87,22 @@ func (c *SlackClient) SendWebhookMessage(webhookURL string, message Message) err
 	return nil
 }
 
-// FormatProposalMessage creates a formatted Slack message for a proposal
-func FormatProposalMessage(notification models.Notification) Message {
+// Send implements the notifier.Notifier interface
+func (c *SlackClient) Send(destination string, notification models.Notification) error {
+	c.log.Debug().Msg("Sending Slack notification to webhook")
+
+	message := formatNotification(notification)
+
+	return c.SendWebhookMessage(destination, message)
+}
+
+// Name implements the notifier.Notifier interface
+func (c *SlackClient) Name() string {
+	return "slack"
+}
+
+// FormatNotification creates a formatted Slack message for a notification
+func formatNotification(notification models.Notification) Message {
 	// Determine color based on status
 	color := getColorForStatus(notification.Status)
 

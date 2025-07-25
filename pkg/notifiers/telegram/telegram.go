@@ -7,6 +7,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/hazim1093/zeta-comms/pkg/models"
+	"github.com/hazim1093/zeta-comms/pkg/notifiers"
 	"github.com/rs/zerolog"
 )
 
@@ -16,8 +17,10 @@ type TelegramClient struct {
 	bot *tgbotapi.BotAPI
 }
 
-// NewTelegramClient creates a new Telegram client
-func NewTelegramClient(logger *zerolog.Logger, botToken string) (*TelegramClient, error) {
+// Ensure TelegramClient implements the notifiers.Notifier interface
+var _ notifiers.Notifier = (*TelegramClient)(nil)
+
+func InitializeTelegramClient(logger *zerolog.Logger, botToken string) (*TelegramClient, error) {
 	log := logger.With().Str("service", "telegramClient").Logger()
 
 	// Create a new Telegram bot API client
@@ -29,6 +32,10 @@ func NewTelegramClient(logger *zerolog.Logger, botToken string) (*TelegramClient
 	client := &TelegramClient{
 		log: &log,
 		bot: bot,
+	}
+
+	if err = client.Connect(); err != nil {
+		return nil, err
 	}
 
 	return client, nil
@@ -69,8 +76,8 @@ func (c *TelegramClient) SendMessage(chatID string, text string, parseMode strin
 	return nil
 }
 
-// FormatProposalMessage creates a formatted Telegram message for a proposal
-func FormatProposalMessage(notification models.Notification) string {
+// formatNotification creates a formatted Telegram message for a notification
+func formatNotification(notification models.Notification) string {
 	// Create a formatted message with Markdown
 	emoji := getEmojiForStatus(notification.Status)
 
@@ -183,4 +190,22 @@ func (c *TelegramClient) StartPolling() {
 			}
 		}
 	}()
+}
+
+// Send implements the notifier.Notifier interface
+func (c *TelegramClient) Send(destination string, notification models.Notification) error {
+	if c.bot == nil {
+		return fmt.Errorf("telegram client not initialized")
+	}
+
+	c.log.Debug().Msg("Sending Telegram notification to chat: " + destination)
+
+	message := formatNotification(notification)
+
+	return c.SendMessage(destination, message, "Markdown")
+}
+
+// Name implements the notifier.Notifier interface
+func (c *TelegramClient) Name() string {
+	return "telegram"
 }

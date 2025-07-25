@@ -21,11 +21,7 @@ type Config struct {
 	} `mapstructure:"networks"`
 
 	AudienceConfig map[string]struct {
-		Channels struct {
-			Discord  []string `mapstructure:"discord"`
-			Telegram []string `mapstructure:"telegram"`
-			Slack    []string `mapstructure:"slack"`
-		} `mapstructure:"channels"`
+		Channels map[string][]string `mapstructure:"channels"`
 	} `mapstructure:"audience_config"`
 
 	Events struct {
@@ -36,7 +32,7 @@ type Config struct {
 		} `mapstructure:"proposals"`
 	} `mapstructure:"events"`
 
-	AuthConfig struct {
+	Notifiers struct {
 		Discord struct {
 			BotToken string `mapstructure:"bot_token"`
 		} `mapstructure:"discord"`
@@ -44,7 +40,7 @@ type Config struct {
 		Telegram struct {
 			BotToken string `mapstructure:"bot_token"`
 		} `mapstructure:"telegram"`
-	} `mapstructure:"auth_config"`
+	} `mapstructure:"notifiers"`
 
 	Storage struct {
 		Filename string `mapstructure:"filename"`

@@ -40,7 +40,7 @@ events:
       - "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade"
       - "/cosmos.upgrade.v1beta1.MsgCancelUpgrade"
 
-auth_config:
+notifiers:
   discord:
     bot_token: "${DISCORD_BOT_TOKEN}" # Use environment variable for security
   telegram:

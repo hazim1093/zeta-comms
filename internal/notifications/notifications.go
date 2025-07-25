@@ -1,13 +1,12 @@
 package notifications
 
 import (
-	"fmt"
-
 	"github.com/hazim1093/zeta-comms/internal/config"
-	"github.com/hazim1093/zeta-comms/pkg/discord"
 	"github.com/hazim1093/zeta-comms/pkg/models"
-	"github.com/hazim1093/zeta-comms/pkg/slack"
-	"github.com/hazim1093/zeta-comms/pkg/telegram"
+	"github.com/hazim1093/zeta-comms/pkg/notifiers"
+	"github.com/hazim1093/zeta-comms/pkg/notifiers/discord"
+	"github.com/hazim1093/zeta-comms/pkg/notifiers/slack"
+	"github.com/hazim1093/zeta-comms/pkg/notifiers/telegram"
 	"github.com/rs/zerolog"
 )
 
@@ -15,45 +14,36 @@ import (
 type Notification = models.Notification
 
 type NotificationService struct {
-	config   *config.Config
-	log      *zerolog.Logger
-	Slack    *slack.SlackClient
-	Discord  *discord.DiscordClient
-	Telegram *telegram.TelegramClient
+	config    *config.Config
+	log       *zerolog.Logger
+	notifiers map[string]notifiers.Notifier
 }
 
 func NewNotificationService(cfg *config.Config, log *zerolog.Logger) *NotificationService {
+	service := &NotificationService{
+		config:    cfg,
+		log:       log,
+		notifiers: make(map[string]notifiers.Notifier),
+	}
+
 	// Initialize Discord client
-	discordClient, err := discord.NewDiscordClient(log, cfg.AuthConfig.Discord.BotToken)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to create Discord client")
+	if discordClient, err := discord.InitializeDiscordClient(log, cfg.Notifiers.Discord.BotToken); err == nil {
+		service.notifiers["discord"] = discordClient
 	} else {
-		err = discordClient.Connect()
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to connect to Discord")
-		} else {
-			discordClient.AddReconnectHandler()
-		}
+		log.Error().Err(err).Msg("Failed to initialize Discord client")
 	}
 
 	// Initialize Telegram client
-	telegramClient, err := telegram.NewTelegramClient(log, cfg.AuthConfig.Telegram.BotToken)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to create Telegram client")
+	if telegramClient, err := telegram.InitializeTelegramClient(log, cfg.Notifiers.Telegram.BotToken); err == nil {
+		service.notifiers["telegram"] = telegramClient
 	} else {
-		err = telegramClient.Connect()
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to connect to Telegram")
-		}
+		log.Error().Err(err).Msg("Failed to initialize Telegram client")
 	}
 
-	return &NotificationService{
-		config:   cfg,
-		log:      log,
-		Slack:    slack.NewSlackClient(log),
-		Discord:  discordClient,
-		Telegram: telegramClient,
-	}
+	// Initialize Slack client
+	service.notifiers["slack"] = slack.NewSlackClient(log)
+
+	return service
 }
 
 func (n *NotificationService) Notify(notification Notification, audience string) {
@@ -66,91 +56,35 @@ func (n *NotificationService) Notify(notification Notification, audience string)
 		return
 	}
 
-	for _, channelID := range audienceConfig.Channels.Discord {
-		n.sendDiscordNotification(channelID, notification)
-
-		log.Info().
-			Str("proposal_id", notification.ProposalId).
-			Msg("Discord notification sent successfully")
-	}
-
-	for _, webhook := range audienceConfig.Channels.Slack {
-		n.sendSlackNotification(webhook, notification)
-
-		log.Info().
-			Str("proposal_id", notification.ProposalId).
-			Msg("Slack notification sent successfully")
-	}
-
-	for _, chatID := range audienceConfig.Channels.Telegram {
-		n.sendTelegramNotification(chatID, notification)
-
-		log.Info().
-			Str("proposal_id", notification.ProposalId).
-			Msg("Telegram notification sent successfully")
+	for platform, channels := range audienceConfig.Channels {
+		n.sendToChannels(platform, channels, notification, log)
 	}
 }
 
-func (n *NotificationService) sendSlackNotification(webhook string, notification Notification) {
-	n.log.Debug().Msg("Sending Slack notification to webhook")
+func (n *NotificationService) sendToChannels(platform string, channels []string, notification Notification, log zerolog.Logger) {
+	notifier, exists := n.notifiers[platform]
+	if !exists {
+		log.Error().Msgf("No notifier found for platform: %s", platform)
 
-	message := slack.FormatProposalMessage(notification)
+		return
+	}
 
-	err := n.Slack.SendWebhookMessage(webhook, message)
-	if err != nil {
-		n.log.Error().
-			Err(err).
-			Str("webhook", webhook).
+	for _, channel := range channels {
+		err := notifier.Send(channel, notification)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("platform", platform).
+				Str("channel", channel).
+				Str("proposal_id", notification.ProposalId).
+				Msg("Failed to send notification")
+
+			continue
+		}
+
+		log.Info().
+			Str("platform", platform).
 			Str("proposal_id", notification.ProposalId).
-			Msg("Failed to send Slack notification")
-
-		return
-	}
-}
-
-func (n *NotificationService) sendDiscordNotification(channelID string, notification Notification) {
-	if n.Discord == nil {
-		n.log.Warn().Msg("Discord client not initialized")
-
-		return
-	}
-
-	n.log.Debug().Msg("Sending Discord notification to channel: " + channelID)
-
-	embed := discord.FormatProposalMessage(notification)
-	content := fmt.Sprintf("New proposal update: %s", notification.Title)
-
-	err := n.Discord.SendChannelMessage(channelID, content, embed)
-	if err != nil {
-		n.log.Error().
-			Err(err).
-			Str("channel_id", channelID).
-			Str("proposal_id", notification.ProposalId).
-			Msg("Failed to send Discord notification")
-
-		return
-	}
-}
-
-func (n *NotificationService) sendTelegramNotification(chatID string, notification Notification) {
-	if n.Telegram == nil {
-		n.log.Warn().Msg("Telegram client not initialized")
-
-		return
-	}
-
-	n.log.Debug().Msg("Sending Telegram notification to chat: " + chatID)
-
-	message := telegram.FormatProposalMessage(notification)
-
-	err := n.Telegram.SendMessage(chatID, message, "Markdown")
-	if err != nil {
-		n.log.Error().
-			Err(err).
-			Str("chat_id", chatID).
-			Str("proposal_id", notification.ProposalId).
-			Msg("Failed to send Telegram notification")
-
-		return
+			Msg("Notification sent successfully")
 	}
 }
