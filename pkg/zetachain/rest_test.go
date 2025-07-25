@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"testing"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -14,6 +15,11 @@ import (
 	"github.com/hazim1093/zeta-comms/internal/config"
 	"github.com/hazim1093/zeta-comms/pkg/zetachain"
 )
+
+func TestZetachain(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Zetachain Suite")
+}
 
 const (
 	PROPOSAL_STATUS_UNSPECIFIED    = "unspecified"
