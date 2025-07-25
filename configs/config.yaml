@@ -6,11 +6,13 @@ networks:
     audiences: # Should match the keys in audience_config
     - mainnet_operators
     - testnet_operators
+    - developers
   testnet:
     api_url: https://zetachain-athens.blockpi.network/lcd/v1/public
     poll_interval: 5s
     audiences:
     - testnet_operators
+    - developers
 # another_net:
 #   api_url: https://anothernet.com
 
@@ -32,6 +34,10 @@ audience_config:
       telegram:
       - "-1001234567890" # zetachain-testnet-operators group
       - "-1001234567890" # zetachain-testnet-notifs channel
+  developers:
+    channels:
+      discord:
+      - "1398249758371348501"
 
 events:
   proposals:

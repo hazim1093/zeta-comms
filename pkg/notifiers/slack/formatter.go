@@ -24,7 +24,7 @@ func formatNotification(notification models.Notification) Message {
 	}
 
 	// Build message content
-	var messageContent string
+	messageContent := ""
 
 	// Add software upgrade info if available
 	if notification.UpgradeName != "" {
@@ -44,17 +44,15 @@ func formatNotification(notification models.Notification) Message {
 
 	// Add voting results using the common formatter
 	// Format the voting results section
-	messageContent += "*Voting Results:*\n"
 
 	if notification.TotalVotes != "" {
+		messageContent += "*Voting Results:*\n"
 		messageContent += fmt.Sprintf("• Yes: %s\n", notification.YesVotes)
 		messageContent += fmt.Sprintf("• No: %s\n", notification.NoVotes)
 		messageContent += fmt.Sprintf("• Abstain: %s\n", notification.AbstainVotes)
 		messageContent += fmt.Sprintf("• Veto: %s\n", notification.VetoVotes)
 		messageContent += "\n"
 		messageContent += "*Total Votes:* " + notification.TotalVotes + "\n"
-	} else {
-		messageContent += "No voting results available.\n"
 	}
 
 	messageContent += "\n"

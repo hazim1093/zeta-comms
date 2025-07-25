@@ -14,7 +14,11 @@ func formatNotification(notification models.Notification) *discordgo.MessageEmbe
 	// Create a rich embed for the notification
 	color := getColorForStatus(notification.Status)
 
-	title := fmt.Sprintf("[%s] Proposal #%s: %s", notification.Network, notification.ProposalId, notification.Title)
+	title := "Message from ZetaChain Governance"
+	if notification.Title != "" {
+		title = fmt.Sprintf("[%s] Proposal #%s: %s", notification.Network, notification.ProposalId, notification.Title)
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Title:     title,
 		Color:     color,
@@ -25,9 +29,11 @@ func formatNotification(notification models.Notification) *discordgo.MessageEmbe
 	}
 
 	// Build description
-	var description string
+	description := ""
 
-	description = fmt.Sprintf("**ID:** %s\n**Status:** %s\n\n", notification.ProposalId, notifiers.FormatStatus(notification.Status))
+	if notification.ProposalId != "" {
+		description = fmt.Sprintf("**ID:** %s\n**Status:** %s\n\n", notification.ProposalId, notifiers.FormatStatus(notification.Status))
+	}
 
 	// Add software upgrade info if available
 	if notification.UpgradeName != "" {
@@ -44,16 +50,14 @@ func formatNotification(notification models.Notification) *discordgo.MessageEmbe
 		description += "\n"
 	}
 
-	description += "*Voting Results:*\n"
 	if notification.TotalVotes != "" {
+		description += "*Voting Results:*\n"
 		description += fmt.Sprintf("• Yes: %s\n", notification.YesVotes)
 		description += fmt.Sprintf("• No: %s\n", notification.NoVotes)
 		description += fmt.Sprintf("• Abstain: %s\n", notification.AbstainVotes)
 		description += fmt.Sprintf("• Veto: %s\n", notification.VetoVotes)
 		description += "\n"
 		description += "*Total Votes:* " + notification.TotalVotes + "\n"
-	} else {
-		description += "No voting results available.\n"
 	}
 
 	description += "\n"

@@ -7,6 +7,7 @@ import (
 	"github.com/hazim1093/zeta-comms/internal/events"
 	"github.com/hazim1093/zeta-comms/internal/notifications"
 	"github.com/hazim1093/zeta-comms/internal/storage"
+	"github.com/hazim1093/zeta-comms/pkg/models"
 	"github.com/hazim1093/zeta-comms/pkg/zetachain"
 	"github.com/rs/zerolog"
 )
@@ -24,6 +25,22 @@ func NewCommsEngine(cfg *config.Config, log *zerolog.Logger) *CommsEngine {
 		log:                 log,
 		notificationService: notifications.NewNotificationService(cfg, log),
 		storageService:      storage.NewStorageService(cfg, log),
+	}
+}
+
+func (e *CommsEngine) ProcessBroadcastMessage(msgs <-chan models.BroadcastMessage) {
+	for msg := range msgs {
+		e.log.Info().Msgf("Processing broadcast message from %s: %s", msg.Username, msg.Message)
+
+		// Notify all configured audiences
+		for audience := range e.config.AudienceConfig {
+			e.notificationService.Notify(
+				notifications.Notification{
+					Summary: msg.Message,
+				},
+				audience,
+			)
+		}
 	}
 }
 

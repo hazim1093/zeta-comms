@@ -10,9 +10,20 @@ import (
 
 // formatNotification creates a formatted Telegram message for a notification
 func formatNotification(notification models.Notification) string {
-	formattedMessage := fmt.Sprintf("*[%s]* *Proposal* %s: %s\n\n", notification.Network, notification.ProposalId, notification.Title)
-	formattedMessage += fmt.Sprintf("*ID:* %s\n", notification.ProposalId)
-	formattedMessage += fmt.Sprintf("*Status:* %s\n\n", notifiers.FormatStatus(notification.Status))
+	formattedMessage := ""
+
+	if notification.Title != "" {
+
+		formattedMessage = fmt.Sprintf("*[%s]* *Proposal* %s: %s\n\n", notification.Network, notification.ProposalId, notification.Title)
+	}
+
+	if notification.ProposalId != "" {
+		formattedMessage += fmt.Sprintf("*ID:* %s\n", notification.ProposalId)
+	}
+
+	if notification.Status != "" {
+		formattedMessage += fmt.Sprintf("*Status:* %s\n\n", notifiers.FormatStatus(notification.Status))
+	}
 
 	// Add software upgrade info if available
 	if notification.UpgradeName != "" {
@@ -29,16 +40,14 @@ func formatNotification(notification models.Notification) string {
 		formattedMessage += "\n"
 	}
 
-	formattedMessage += "*Voting Results:*\n"
 	if notification.TotalVotes != "" {
+		formattedMessage += "*Voting Results:*\n"
 		formattedMessage += fmt.Sprintf("• Yes: %s\n", notification.YesVotes)
 		formattedMessage += fmt.Sprintf("• No: %s\n", notification.NoVotes)
 		formattedMessage += fmt.Sprintf("• Abstain: %s\n", notification.AbstainVotes)
 		formattedMessage += fmt.Sprintf("• Veto: %s\n", notification.VetoVotes)
 		formattedMessage += "\n"
 		formattedMessage += "*Total Votes:* " + notification.TotalVotes + "\n"
-	} else {
-		formattedMessage += "No voting results available.\n"
 	}
 
 	formattedMessage += "\n"

@@ -57,6 +57,15 @@ func startZetaComms(ctx context.Context, cfg *config.Config, log *zerolog.Logger
 
 		go commsEngine.ProcessProposalUpdates(network, proposalsChannel)
 	}
+
+	broadcastChannel := events.StartTelegramBroadcastClient(log, cfg)
+	if broadcastChannel == nil {
+		log.Error().Msg("Failed to start Telegram broadcast client")
+
+		return
+	}
+
+	go commsEngine.ProcessBroadcastMessage(*broadcastChannel)
 }
 
 func InitLogger(logFormat string, globalLevel string) zerolog.Logger {

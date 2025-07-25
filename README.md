@@ -201,19 +201,3 @@ go run main.go --config additional-config.yaml
 2. Implement the client with appropriate message formatting
 3. Update the `NotificationService` in `internal/comms/notifications.go`
 4. Update the configuration structure in `internal/config/config.go`
-
-## TODOs
-
-- [x] Slack integration
-- [x] Discord integration
-- [x] Telegram integration
-- [x] Improved message formatting
-- [x] Run for all networks
-- [x] update config , add bot tokens to single config and maybe split in structs?
-- [ ] Ask to refactor notifications to make it common
-- [ ] broadcast messages
-- [ ] Pagination for proposal fetching
-- [ ] Comprehensive tests
-- [ ] Docs
-- [x] loook at type MsgSoftwareUpgrade, in config or generic check
-- [ ] test upgrade by submtted proposal

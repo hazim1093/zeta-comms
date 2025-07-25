@@ -3,6 +3,7 @@ package telegram
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/hazim1093/zeta-comms/pkg/models"
@@ -94,8 +95,7 @@ func (c *TelegramClient) SendMessage(chatID string, text string, parseMode strin
 }
 
 // StartPolling starts polling for updates from Telegram
-// This is optional and can be used if you want to receive messages from users
-func (c *TelegramClient) StartPolling() {
+func (c *TelegramClient) StartPolling(broadcastChan chan models.BroadcastMessage) {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
@@ -104,15 +104,43 @@ func (c *TelegramClient) StartPolling() {
 	go func() {
 		for update := range updates {
 			if update.Message != nil {
-				c.log.Info().
-					Str("user", update.Message.From.UserName).
-					Str("chat_id", fmt.Sprintf("%d", update.Message.Chat.ID)).
-					Str("text", update.Message.Text).
-					Msg("Received message")
+				// Only handle broadcast commands
+				if message, ok := c.parseBroadcastCommand(update.Message.Text); ok {
+					c.log.Info().
+						Str("user", update.Message.From.UserName).
+						Str("chat_id", fmt.Sprintf("%d", update.Message.Chat.ID)).
+						Str("command", "broadcast").
+						Str("message", message).
+						Msgf("Received broadcast command %s", message)
 
-				//TODO: Here you can add command handling if needed
-				c.log.Info().Msg("Handling message from user")
+					// Send message to broadcast channel
+					broadcastChan <- models.BroadcastMessage{
+						Message:  message,
+						Username: update.Message.From.UserName,
+						ChatID:   update.Message.Chat.ID,
+					}
+				}
 			}
 		}
 	}()
+}
+
+// parseBroadcastCommand parses a broadcast command message and returns the broadcast text
+// Format: /broadcast <message>
+func (c *TelegramClient) parseBroadcastCommand(text string) (string, bool) {
+	// Check if the message starts with /broadcast
+	if !strings.HasPrefix(text, "/broadcast ") {
+		return "", false
+	}
+
+	// Extract the message after /broadcast
+	message := strings.TrimPrefix(text, "/broadcast ")
+	message = strings.TrimSpace(message)
+
+	// Return empty if no message provided
+	if message == "" {
+		return "", false
+	}
+
+	return message, true
 }
