@@ -3,7 +3,6 @@ package telegram
 import (
 	"fmt"
 	"strconv"
-	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/hazim1093/zeta-comms/pkg/models"
@@ -41,6 +40,24 @@ func InitializeTelegramClient(logger *zerolog.Logger, botToken string) (*Telegra
 	return client, nil
 }
 
+// Send implements the notifier.Notifier interface
+func (c *TelegramClient) Send(destination string, notification models.Notification) error {
+	if c.bot == nil {
+		return fmt.Errorf("telegram client not initialized")
+	}
+
+	c.log.Debug().Msg("Sending Telegram notification to chat: " + destination)
+
+	message := formatNotification(notification)
+
+	return c.SendMessage(destination, message, "Markdown")
+}
+
+// Name implements the notifier.Notifier interface
+func (c *TelegramClient) Name() string {
+	return "telegram"
+}
+
 // Connect establishes a connection to Telegram and logs bot information
 func (c *TelegramClient) Connect() error {
 	c.log.Info().
@@ -76,98 +93,6 @@ func (c *TelegramClient) SendMessage(chatID string, text string, parseMode strin
 	return nil
 }
 
-// formatNotification creates a formatted Telegram message for a notification
-func formatNotification(notification models.Notification) string {
-	// Create a formatted message with Markdown
-	emoji := getEmojiForStatus(notification.Status)
-
-	formattedMessage := fmt.Sprintf("*[%s]* *Proposal* %s: %s\n\n", notification.Network, notification.ProposalId, notification.Title)
-	formattedMessage += fmt.Sprintf("*ID:* %s\n", notification.ProposalId)
-	formattedMessage += fmt.Sprintf("*Status:* %s %s\n\n", emoji, formatStatus(notification.Status))
-
-	// Add software upgrade info if available
-	if notification.UpgradeName != "" {
-		formattedMessage += fmt.Sprintf("*Upgrade:* %s\n*Target Height:* %s\n\n", notification.UpgradeName, notification.TargetHeight)
-	}
-
-	// Add deposit information if available
-	if len(notification.TotalDeposit) > 0 {
-		formattedMessage += "*Deposits:*\n"
-		for _, deposit := range notification.TotalDeposit {
-			formattedMessage += fmt.Sprintf("• %s %s\n", deposit.Amount, deposit.Denom)
-		}
-
-		formattedMessage += "\n"
-	}
-
-	formattedMessage += "*Voting Results:*\n"
-	if notification.TotalVotes != "" {
-		formattedMessage += fmt.Sprintf("• Yes: %s\n", notification.YesVotes)
-		formattedMessage += fmt.Sprintf("• No: %s\n", notification.NoVotes)
-		formattedMessage += fmt.Sprintf("• Abstain: %s\n", notification.AbstainVotes)
-		formattedMessage += fmt.Sprintf("• Veto: %s\n", notification.VetoVotes)
-		formattedMessage += "\n"
-		formattedMessage += "*Total Votes:* " + notification.TotalVotes + "\n"
-	} else {
-		formattedMessage += "No voting results available.\n"
-	}
-
-	formattedMessage += "\n"
-
-	// Add timeline information
-	if !notification.SubmitTime.IsZero() {
-		formattedMessage += fmt.Sprintf("*Submitted:* %s\n", notification.SubmitTime.Format(time.RFC1123))
-	}
-
-	if !notification.VotingEndTime.IsZero() {
-		formattedMessage += fmt.Sprintf("*Voting Ends:* %s\n", notification.VotingEndTime.Format(time.RFC1123))
-	}
-
-	// Add expedited flag if true
-	if notification.Expedited {
-		formattedMessage += "*Expedited:* Yes\n"
-	}
-
-	// Add failed reason if available
-	if notification.FailedReason != "" {
-		formattedMessage += fmt.Sprintf("*Failed Reason:* %s\n", notification.FailedReason)
-	}
-
-	// Add summary with a separator
-	formattedMessage += "\n*Summary:*\n" + notification.Summary
-	formattedMessage += fmt.Sprintf("\n\n_Updated at: %s_", time.Now().Format(time.RFC1123))
-
-	return formattedMessage
-}
-
-// getEmojiForStatus returns an emoji based on proposal status
-func getEmojiForStatus(status string) string {
-	switch status {
-	case "PROPOSAL_STATUS_VOTING_PERIOD":
-		return "🗳️"
-	case "PROPOSAL_STATUS_PASSED":
-		return "✅"
-	case "PROPOSAL_STATUS_REJECTED":
-		return "❌"
-	default:
-		return "ℹ️"
-	}
-}
-
-// formatStatus returns a human-readable version of the proposal status
-func formatStatus(status string) string {
-	switch status {
-	case "PROPOSAL_STATUS_VOTING_PERIOD":
-		return "Voting Period"
-	case "PROPOSAL_STATUS_PASSED":
-		return "Passed"
-	case "PROPOSAL_STATUS_REJECTED":
-		return "Rejected"
-	default:
-		return status
-	}
-}
-
 // StartPolling starts polling for updates from Telegram
 // This is optional and can be used if you want to receive messages from users
 func (c *TelegramClient) StartPolling() {
@@ -190,22 +115,4 @@ func (c *TelegramClient) StartPolling() {
 			}
 		}
 	}()
-}
-
-// Send implements the notifier.Notifier interface
-func (c *TelegramClient) Send(destination string, notification models.Notification) error {
-	if c.bot == nil {
-		return fmt.Errorf("telegram client not initialized")
-	}
-
-	c.log.Debug().Msg("Sending Telegram notification to chat: " + destination)
-
-	message := formatNotification(notification)
-
-	return c.SendMessage(destination, message, "Markdown")
-}
-
-// Name implements the notifier.Notifier interface
-func (c *TelegramClient) Name() string {
-	return "telegram"
 }
