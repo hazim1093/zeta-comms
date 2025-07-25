@@ -28,20 +28,20 @@ type ProposalsResponse struct {
 }
 
 type Proposal struct {
-	ProposalId       string            `json:"id"`
-	Status           string            `json:"status"`
-	Title            string            `json:"title"`
-	Summary          string            `json:"summary"`
-	Messages         []Message         `json:"messages"`
-	FinalTallyResult TallyResult       `json:"final_tally_result"`
-	SubmitTime       time.Time         `json:"submit_time"`
-	DepositEndTime   time.Time         `json:"deposit_end_time"`
-	VotingStartTime  time.Time         `json:"voting_start_time"`
-	VotingEndTime    time.Time         `json:"voting_end_time"`
-	TotalDeposit     []Deposit         `json:"total_deposit"`
-	Metadata         string            `json:"metadata"`
-	FailedReason     string            `json:"failed_reason,omitempty"`
-	Expedited        bool              `json:"expedited"`
+	ProposalId       string      `json:"id"`
+	Status           string      `json:"status"`
+	Title            string      `json:"title"`
+	Summary          string      `json:"summary"`
+	Messages         []Message   `json:"messages"`
+	FinalTallyResult TallyResult `json:"final_tally_result"`
+	SubmitTime       time.Time   `json:"submit_time"`
+	DepositEndTime   time.Time   `json:"deposit_end_time"`
+	VotingStartTime  time.Time   `json:"voting_start_time"`
+	VotingEndTime    time.Time   `json:"voting_end_time"`
+	TotalDeposit     []Deposit   `json:"total_deposit"`
+	Metadata         string      `json:"metadata"`
+	FailedReason     string      `json:"failed_reason,omitempty"`
+	Expedited        bool        `json:"expedited"`
 }
 
 type TallyResult struct {
@@ -62,7 +62,7 @@ type Message struct {
 }
 
 type MessageData struct {
-	Authority string    `json:"authority,omitempty"`
+	Authority string      `json:"authority,omitempty"`
 	Plan      UpgradePlan `json:"plan,omitempty"`
 }
 
@@ -85,17 +85,17 @@ func NewRESTClient(cfg *config.Config, logger *zerolog.Logger) *RESTClient {
 }
 
 func (r *RESTClient) GetProposals(network string) (*ProposalsResponse, error) {
-	// Get network URL
 	networkURL, ok := r.config.Networks[network]
 	if !ok {
 		return nil, fmt.Errorf("network %s not found in config", network)
 	}
 
-	// Make request to proposals endpoint with pagination.reverse=true
 	var response ProposalsResponse
 	resp, err := r.restyClient.R().
 		SetResult(&response).
-		SetQueryParams(map[string]string{}).
+		SetQueryParams(map[string]string{
+			"pagination.limit": "1000",
+		}).
 		Get(networkURL.ApiUrl.String() + proposalsPath)
 
 	if err != nil {
@@ -107,4 +107,9 @@ func (r *RESTClient) GetProposals(network string) (*ProposalsResponse, error) {
 	}
 
 	return &response, nil
+}
+
+// SetRestyClient allows setting a custom resty client for testing purposes
+func (r *RESTClient) SetRestyClient(client *resty.Client) {
+	r.restyClient = client
 }
