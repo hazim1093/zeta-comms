@@ -43,6 +43,10 @@ export DISCORD_BOT_TOKEN="your-discord-bot-token"
 
 # Required for Telegram notifications
 export TELEGRAM_BOT_TOKEN="your-telegram-bot-token"
+
+
+export SLACK_TESTNET_WEBHOOK="your-slack-webhook"
+export SLACK_MAINNET_WEBHOOK="your-slack-webhook"
 ```
 
 ### Setting Up Notification Channels

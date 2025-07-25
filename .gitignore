@@ -4,3 +4,5 @@ configs/*.yaml
 
 file-db.yaml
 bin/
+
+zeta-comms
