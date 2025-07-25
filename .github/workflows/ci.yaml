@@ -40,14 +40,14 @@ jobs:
             ${{ runner.os }}-golangci-lint-
 
       - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           install-mode: binary
           skip-cache: true
 
       - name: Run golangci-lint
-        run: golangci-lint run ./...
+        run: golangci-lint run
 
       - name: Run tests
         run: go test ./...
