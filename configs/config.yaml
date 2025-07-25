@@ -20,20 +20,20 @@ audience_config:
   mainnet_operators:
     channels:
       discord:
-      - "123456789012345678" # Discord channel ID for mainnet
+      - "1398006827903357150" # Discord channel ID for mainnet
       slack:
-      - https://hooks.slack.com/mainnet-webhook
+      - "${SLACK_MAINNET_WEBHOOK}"
       telegram:
-      - "-1001234567890" # zetachain-mainnet-notifs channel
+      - "-1002380605871" # zetachain-mainnet-notifs channel
   testnet_operators:
     channels:
       discord:
-      - "123456789012345678" # Discord channel ID for testnet
+      - "1397738539202117712" # Discord channel ID for testnet
       slack:
-      - https://hooks.slack.com/testnet-webhook
+      - "${SLACK_TESTNET_WEBHOOK}"
       telegram:
-      - "-1001234567890" # zetachain-testnet-operators group
-      - "-1001234567890" # zetachain-testnet-notifs channel
+      - "-1002765533620" # zetachain-testnet-operators group
+      - "-1002599116582" # zetachain-testnet-notifs channel
   developers:
     channels:
       discord:
